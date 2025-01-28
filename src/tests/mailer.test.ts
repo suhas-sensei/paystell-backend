@@ -1,6 +1,11 @@
 import { sendEmail } from "../utils/mailer";
+import nodemailer from "nodemailer";
 
-jest.mock("nodemailer");
+jest.mock("nodemailer", () => ({
+  createTransport: jest.fn().mockReturnValue({
+    sendMail: jest.fn().mockResolvedValue({ messageId: "mocked-message-id" }),
+  }),
+}));
 
 describe("Mailer Utility", () => {
   it("should send an email successfully", async () => {
@@ -11,11 +16,13 @@ describe("Mailer Utility", () => {
     });
 
     expect(result).toHaveProperty("messageId");
-    expect(result.messageId).toBe("12345");
+    expect(result.messageId).toBe("mocked-message-id");
   });
 
   it("should throw an error if email fails to send", async () => {
-    jest.spyOn(require("nodemailer").createTransport(), "sendMail").mockRejectedValueOnce(new Error("Send failed"));
+    const transport = nodemailer.createTransport();
+
+    (transport.sendMail as jest.Mock).mockRejectedValueOnce(new Error("Send failed"));
 
     await expect(
       sendEmail({
