@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import DataSource from '../config/db';
-import { EmailVerification } from '../entities/emailVerification';
+import { EmailVerification } from '../entities/EmailVerification';
 import { User } from '../entities/User';
 import { sendVerificationEmail } from '../utils/sendVerificationEmail';
 import { verifyToken, generateVerificationToken } from '../utils/token';

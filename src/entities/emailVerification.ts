@@ -19,7 +19,7 @@ export class EmailVerification {
   isVerified!: boolean;
 
   @ManyToOne(() => User, (user) => user.emailVerifications, { onDelete: "CASCADE" })
-  user: User;
+  user!: User;
 
   @CreateDateColumn()
   createdAt!: Date;
