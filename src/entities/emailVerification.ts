@@ -1,6 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { User } from "./User";
 
+
+//
 @Entity()
 export class EmailVerification {
   @PrimaryGeneratedColumn("uuid")
