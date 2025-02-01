@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, Length, IsEnum } from "class-validator";
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,OneToOne } from "typeorm" 
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn} from "typeorm" //OneToOne } from "typeorm" 
 import { UserRole } from "../enums/UserRole"
 //import { TwoFactorAuth } from "./TwoFactorAuth"
 
@@ -43,6 +43,7 @@ export class User {
     @Column({ default: false })
     isWalletVerified!: boolean
 
+    //Implement once TwoFactorAuth entity is created
     // @OneToOne(() => TwoFactorAuth, tfa => tfa.user)
     // twoFactorAuth!: TwoFactorAuth
 
