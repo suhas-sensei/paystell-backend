@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 import AppDataSource from '../config/db';
 import { User } from '../entities/User';
+import { validate } from 'class-validator';
 import { CreateUserDTO } from '../dtos/CreateUserDTO';
 import { UpdateUserDTO } from '../dtos/UpdateUserDTO';
 import bcrypt from 'bcrypt';
@@ -13,6 +14,22 @@ export class UserService {
   }
 
   async createUser(data: CreateUserDTO): Promise<User> {
+
+    const dto = Object.assign(new CreateUserDTO(), data);
+    const errors = await validate(dto);
+
+    if (errors.length > 0) {
+        throw new Error(errors.map(err => Object.values(err.constraints || {})).join(', '));
+    }
+    
+    const existingUser = await this.userRepository.findOneBy({ 
+      email: data.email 
+    });
+  
+    if (existingUser) {
+      throw new Error('Email already exists');
+    }
+  
     // For security reasons, we should hash the password before saving it to the database
     // The number 10 as salt rounds is recommended to gererate the hash securely
     const hashedPassword = await bcrypt.hash(data.password, 10); 
