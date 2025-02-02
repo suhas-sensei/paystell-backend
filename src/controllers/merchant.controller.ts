@@ -2,6 +2,8 @@ import { Request, Response } from 'express'
 import { validateWebhookUrl } from '../validators/webhook.validators'
 import crypto from 'crypto'
 import { Merchant, MerchantWebhook } from '../interfaces/webhook.interfaces';
+import { MerchantAuthService } from '../services/merchant.service';
+import { WebhookService } from '../services/webhook.service';
 
 
 export class MerchantController {
@@ -35,50 +37,14 @@ export class MerchantController {
           console.error('Registration failed:', error);
           return res.status(500).json({ error: 'Registration failed' });
         }
-      }
-
-    private async getMerchant(id: string): Promise<Merchant | null>{
-            // replace with a method to find merchant from db by id
-            const date = new Date()
-            const merchant: Omit<Merchant, 'createdAt' & 'updatedAt'> = {
-                id,
-                apiKey: 'random-api-key',
-                name: 'random-merchant-name',
-                email: 'randomMerchant@gmail.com',
-                secret: 'merchant-webhook-secret',
-                isActive: true,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            }
-            if (!merchant.isActive) {
-                throw new Error('Merchant not found');
-            }
-            return merchant
     }
 
-    private async getMerchantWebhook(id: string): Promise<MerchantWebhook | null>{
-      // replace with mechanism to get webhook from db
-      const date = new Date()
-      date.setDate(date.getDate() - 10)
-      const merchantWebhook = {
-        id,
-        merchantId: 'merchant-id',
-        url: 'webhook-url',
-        isActive: true,
-        createdAt: date,
-        updatedAt: new Date()
-      }
-      if (!merchantWebhook.isActive) {
-        throw new Error('Webhook is not active')
-      }
-      return merchantWebhook
-    }
 
     async registerWebhook(req: Request, res: Response) {
         try {
             const { url } = req.body;
             const merchantId = req.merchant.id
-            const merchant = await this.getMerchant(merchantId);
+            const merchant = await MerchantAuthService.getMerchantById(merchantId);
             // const secret = merchant?.secret
             // the middleware helped join it to our request headers
 
@@ -117,7 +83,7 @@ export class MerchantController {
       const { newUrl, merchantWebhookId } = req.body
       const merchantId = req.merchant.id
       // const merchant = await this.getMerchant(merchantId)
-      const existingWebhook = await this.getMerchantWebhook(merchantId)
+      const existingWebhook = await WebhookService.getMerchantWebhook(merchantId)
       if (!existingWebhook) {
         throw new Error('No such webhook exists')
       }
