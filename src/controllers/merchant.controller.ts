@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { validateWebhookUrl } from '../validators/webhook.validators'
 import crypto from 'crypto'
-import { MerchantWebhook } from '../interfaces/webhook.interfaces';
+import { Merchant, MerchantWebhook } from '../interfaces/webhook.interfaces';
 
 
 export class MerchantController {
@@ -12,6 +12,7 @@ export class MerchantController {
           
           // Generate API key for the merchant
           const apiKey = crypto.randomBytes(32).toString('hex');
+          const secret = crypto.randomBytes(32).toString('hex');
           
           // Create merchant in database, something like this, edit this to be a function that posts this object
           const merchant = {
@@ -19,6 +20,7 @@ export class MerchantController {
             name,
             email,
             apiKey,
+            secret,
             // password: crypto.createHmac('sha256', password),
             isActive: true
           };
@@ -35,10 +37,49 @@ export class MerchantController {
         }
       }
 
+    private async getMerchant(id: string): Promise<Merchant | null>{
+            // replace with a method to find merchant from db by id
+            const date = new Date()
+            const merchant: Omit<Merchant, 'createdAt' & 'updatedAt'> = {
+                id,
+                apiKey: 'random-api-key',
+                name: 'random-merchant-name',
+                email: 'randomMerchant@gmail.com',
+                secret: 'merchant-webhook-secret',
+                isActive: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+            if (!merchant.isActive) {
+                throw new Error('Merchant not found');
+            }
+            return merchant
+    }
+
+    private async getMerchantWebhook(id: string): Promise<MerchantWebhook | null>{
+      // replace with mechanism to get webhook from db
+      const date = new Date()
+      date.setDate(date.getDate() - 10)
+      const merchantWebhook = {
+        id,
+        merchantId: 'merchant-id',
+        url: 'webhook-url',
+        isActive: true,
+        createdAt: date,
+        updatedAt: new Date()
+      }
+      if (!merchantWebhook.isActive) {
+        throw new Error('Webhook is not active')
+      }
+      return merchantWebhook
+    }
+
     async registerWebhook(req: Request, res: Response) {
         try {
             const { url } = req.body;
             const merchantId = req.merchant.id
+            const merchant = await this.getMerchant(merchantId);
+            // const secret = merchant?.secret
             // the middleware helped join it to our request headers
 
             if (!validateWebhookUrl(url)) {
@@ -47,12 +88,11 @@ export class MerchantController {
                 })
             }
 
-            const secret = crypto.randomBytes(32).toString('hex');
             const webhook: MerchantWebhook = {
                 id: crypto.randomUUID(),
                 merchantId,
                 url,
-                secret,
+                // secret,
                 isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -64,12 +104,48 @@ export class MerchantController {
                 webhook: {
                     id: webhook.id,
                     url: webhook.url,
-                    secret: webhook.secret
+                    // secret: webhook.secret
                 }
             });
         } catch (err) {
             console.error('Failed to register webhook', err)
             return res.status(500).json({error: 'Internal Server Error'})
         }
+    }
+
+    async updateWebhook(req: Request, res: Response) {
+      const { newUrl, merchantWebhookId } = req.body
+      const merchantId = req.merchant.id
+      // const merchant = await this.getMerchant(merchantId)
+      const existingWebhook = await this.getMerchantWebhook(merchantId)
+      if (!existingWebhook) {
+        throw new Error('No such webhook exists')
+      }
+
+      if (!validateWebhookUrl(newUrl)) {
+        return res.status(400).json({
+            error: 'Invalid webhook url. Must be a valid HTTPS url'
+        })
+      }
+
+      const updatedWebhookObject: MerchantWebhook = {
+        id: existingWebhook?.id,
+        merchantId: existingWebhook?.merchantId,
+        url: newUrl,
+        // secret,
+        isActive: existingWebhook?.isActive,
+        createdAt: existingWebhook.createdAt,
+        updatedAt: new Date()
+      }
+      // implement logic to save to database here
+
+      return res.status(200).json({
+          message: 'Webhook registered successfully',
+          webhook: {
+              id: updatedWebhookObject.id,
+              url: updatedWebhookObject.url,
+              // secret: webhook.secret
+          }
+      });
     }
 }

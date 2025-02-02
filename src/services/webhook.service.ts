@@ -11,13 +11,34 @@ export class WebhookService {
         return hmac.digest('hex')
     }
 
+    private async getMerchant(id: string): Promise<Merchant | null>{
+        // replace with a method to find merchant from db by id
+        const date = new Date()
+        const merchant: Omit<Merchant, 'createdAt' & 'updatedAt'> = {
+            id,
+            apiKey: 'random-api-key',
+            name: 'random-merchant-name',
+            email: 'randomMerchant@gmail.com',
+            secret: 'merchant-webhook-secret',
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+        if (!merchant.isActive) {
+            throw new Error('Merchant not found');
+        }
+        return merchant
+    }
+
     private async sendWebhookNotification(
         webhookUrl: string,
         payload: WebhookPayload,
-        secret: string,
+        id: string,
     ): Promise<boolean> {
         try {
-            const signature = await this.generateSignature(payload, secret);
+            const merchant: Merchant | null = await this.getMerchant(id)
+            // if (!merchant) return
+            const signature = await this.generateSignature(payload, merchant?.secret!);
             await axios.post(webhookUrl, payload, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -37,6 +58,7 @@ export class WebhookService {
         merchantWebhook: MerchantWebhook,
         paymentDetails: Omit<WebhookPayload, 'timestamp'>
     ): Promise<boolean> {
+        const merchant = await this.getMerchant(merchantWebhook.merchantId)
         if (!merchantWebhook.isActive || !validateWebhookUrl(merchantWebhook.url)) {
             return false;
         }
@@ -46,48 +68,6 @@ export class WebhookService {
             timestamp: new Date().toISOString()
         }
 
-        return this.sendWebhookNotification(merchantWebhook.url, webhookPayload, merchantWebhook.secret)
-    }
-}
-
-export class MerchantAuthService {
-    private async findMerchantByApiKey(apiKey: string): Promise <Merchant | null> {
-        try {
-            // These are sample details, normally you'd find the merchant from the by their apikey
-            const createDate = new Date()
-            createDate.setDate(createDate.getDate() - 1) 
-                const merchantDetails = {
-                    id: crypto.randomUUID(),
-                    name: 'random-merchant',
-                    email: 'merchant-email',
-                    apiKey,
-                    isActive: false,
-                    createdAt: new Date()
-                    }
-            return {
-                id: merchantDetails.id,
-                apiKey: merchantDetails.apiKey,
-                name: merchantDetails.name,
-                email: merchantDetails.email,
-                isActive: merchantDetails.isActive,
-                createdAt: createDate,
-                updatedAt: createDate,
-            }
-        } catch (err) {
-            console.error(err)
-            return null
-        }
-    }
-
-    async validateApiKey(apiKey: string): Promise<Merchant | null> {
-        if (!apiKey) return null;
-    
-        const merchant = await this.findMerchantByApiKey(apiKey);
-        
-        if (!merchant || !merchant.isActive) {
-          return null;
-        }
-    
-        return merchant;
+        return this.sendWebhookNotification(merchantWebhook.url, webhookPayload, merchant?.secret!)
     }
 }
