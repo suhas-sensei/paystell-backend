@@ -1,6 +1,6 @@
 import express from "express";
 import { MerchantController } from '../controllers/merchant.controller'
-import { authenticateMerchant, authenticateStellarWebhook } from "../middleware/auth";
+import { authenticateMerchant, authenticateStellarWebhook, asyncHandler } from "../middleware/auth";
 import { WebhookController } from "../controllers/webhook.controller";
 
 const router = express.Router();
@@ -8,12 +8,14 @@ const merchantController = new MerchantController();
 const webhookController = new WebhookController()
 
 router.post(
-    // @ts-ignore
-    '/webhooks/register', authenticateMerchant, merchantController.registerWebhook
+    '/webhooks/register', authenticateMerchant, asyncHandler(merchantController.registerWebhook)
+)
+.put(
+    '/webhooks/register:id', authenticateMerchant, asyncHandler(merchantController.updateWebhook) 
 )
 router.post(
-    // @ts-ignore
-    '/webhooks/stellar', authenticateStellarWebhook, webhookController.handleWebhook
+    '/webhooks/stellar', authenticateStellarWebhook, asyncHandler(webhookController.handleWebhook)
 )
+
 
 export default router

@@ -5,6 +5,12 @@ import { Merchant } from '../interfaces/webhook.interfaces';
 
 const merchantAuthService = new MerchantAuthService();
 
+export const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+
 // Add merchant to Request type
 declare global {
     namespace Express {
@@ -14,7 +20,7 @@ declare global {
     }
 }
 
-export const authenticateMerchant = async (
+export const authenticateMerchant = asyncHandler(async (
     req: Request, 
     res: Response, 
     next: NextFunction
@@ -44,9 +50,9 @@ export const authenticateMerchant = async (
         console.error('Auth error:', error);
         res.status(500).json({ error: 'Authentication failed' });
     }
-};
+});
 
-export const authenticateStellarWebhook = async (
+export const authenticateStellarWebhook = asyncHandler(async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -74,9 +80,9 @@ export const authenticateStellarWebhook = async (
         });
       }
       // Attach merchant to request object
-      next();
+      return next();
     } catch (error) {
       console.error("Auth error:", error);
-      res.status(500).json({ error: "Authentication failed" });
+      return res.status(500).json({ error: "Authentication failed" });
     }
-  };
+  });
