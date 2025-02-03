@@ -1,17 +1,61 @@
 import { Repository } from "typeorm";
 import { User } from "../entities/User";
 import { compare } from "bcrypt";
-import { sign } from "jsonwebtoken";
+import { sign, verify } from "jsonwebtoken";
 import AppDataSource from "../config/db";
+
+interface UserRegistrationData {
+    name: string;
+    email: string;
+    password: string;
+}
+
+interface UserResponse {
+    id: number;
+    name: string;
+    email: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+interface TokenResponse {
+    accessToken: string;
+    refreshToken: string;
+}
+
+interface LoginResponse {
+    user: UserResponse;
+    tokens: TokenResponse;
+}
 
 export class AuthService {
     private userRepository: Repository<User>;
+    private readonly JWT_SECRET: string;
+    private readonly JWT_REFRESH_SECRET: string;
 
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
+        this.JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+        this.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key";
     }
 
-    async register(userData: Partial<User>) {
+    private generateTokens(userId: number, email: string): TokenResponse {
+        const accessToken = sign(
+            { id: userId, email },
+            this.JWT_SECRET,
+            { expiresIn: "15m" }
+        );
+
+        const refreshToken = sign(
+            { id: userId, email },
+            this.JWT_REFRESH_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        return { accessToken, refreshToken };
+    }
+
+    async register(userData: UserRegistrationData): Promise<UserResponse> {
         const userExists = await this.userRepository.findOne({
             where: { email: userData.email }
         });
@@ -22,13 +66,18 @@ export class AuthService {
 
         const user = this.userRepository.create(userData);
         await user.hashPassword();
-        await this.userRepository.save(user);
+        const savedUser = await this.userRepository.save(user);
 
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        return {
+            id: savedUser.id,
+            name: savedUser.name,
+            email: savedUser.email,
+            createdAt: savedUser.createdAt,
+            updatedAt: savedUser.updatedAt
+        };
     }
 
-    async login(email: string, password: string) {
+    async login(email: string, password: string): Promise<LoginResponse> {
         const user = await this.userRepository.findOne({
             where: { email }
         });
@@ -42,13 +91,50 @@ export class AuthService {
             throw new Error("Invalid credentials");
         }
 
-        const token = sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET || "your-secret-key",
-            { expiresIn: "1d" }
-        );
+        const tokens = this.generateTokens(user.id, user.email);
 
-        const { password: _, ...userWithoutPassword } = user;
-        return { user: userWithoutPassword, token };
+        return {
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            },
+            tokens
+        };
+    }
+
+    async refresh(refreshToken: string): Promise<TokenResponse> {
+        try {
+            const decoded = verify(refreshToken, this.JWT_REFRESH_SECRET) as any;
+            const user = await this.userRepository.findOne({
+                where: { id: decoded.id }
+            });
+
+            if (!user) {
+                throw new Error("User not found");
+            }
+
+            return this.generateTokens(user.id, user.email);
+        } catch (error) {
+            throw new Error("Invalid refresh token");
+        }
+    }
+
+    async getUserById(id: number): Promise<UserResponse | null> {
+        const user = await this.userRepository.findOne({
+            where: { id }
+        });
+
+        if (!user) return null;
+
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
     }
 }
