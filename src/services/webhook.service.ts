@@ -5,8 +5,9 @@ import { validateWebhookUrl } from '../validators/webhook.validators'
 import { MerchantAuthService } from './merchant.service';
 import { Repository } from "typeorm";
 import AppDataSource from "../config/db";
-import { MerchantWebhookEntity } from 'src/entities/MerchantWebhook.entity';
+import { MerchantWebhookEntity } from './../entities/MerchantWebhook.entity';
 
+const merchantAuthService = new MerchantAuthService()
 
 export class WebhookService {
     private merchantWebhookrepository: Repository<MerchantWebhookEntity>
@@ -27,7 +28,7 @@ export class WebhookService {
         id: string,
     ): Promise<boolean> {
         try {
-            const merchant: Merchant | null = await MerchantAuthService.getMerchantById(id)
+            const merchant: Merchant | null = await merchantAuthService.getMerchantById(id)
             // if (!merchant) return
             const signature = await this.generateSignature(payload, merchant?.secret!);
             await axios.post(webhookUrl, payload, {
@@ -45,15 +46,18 @@ export class WebhookService {
         }
     }
 
-    static async getMerchantWebhook(merchantId: string): Promise<MerchantWebhook | null> {
+    async getMerchantWebhook(merchantId: string): Promise<MerchantWebhook | null> {
         try {
-            const merchantWebhook = this.merchantWebhookRepository.findOne({
+            const merchantWebhook = await this.merchantWebhookrepository.findOne({
                 where: {
                     merchantId
                 }
             })
-            if (!merchantWebhook.isActive) {
+            if (!merchantWebhook) {
                 throw new Error('Merchant web hook not found')
+            }
+            if (!merchantWebhook.isActive) {
+                throw new Error('Merchant web hook not active')
             }
             return merchantWebhook
         } catch (err) {
@@ -66,7 +70,7 @@ export class WebhookService {
         merchantWebhook: MerchantWebhook,
         paymentDetails: Omit<WebhookPayload, 'timestamp'>
     ): Promise<boolean> {
-        const merchant = await MerchantAuthService.getMerchantById(merchantWebhook.merchantId)
+        const merchant = await merchantAuthService.getMerchantById(merchantWebhook.merchantId)
         if (!merchantWebhook.isActive || !validateWebhookUrl(merchantWebhook.url)) {
             return false;
         }

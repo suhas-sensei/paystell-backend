@@ -19,6 +19,8 @@ jest.mock('../../middleware/auth', () => ({
 describe('MerchantController', () => {
     let app: express.Application;
     let merchantController: MerchantController;
+    let merchantAuthService: MerchantAuthService;
+    let webhookService: WebhookService;
 
     beforeEach(() => {
         app = express();
@@ -30,6 +32,8 @@ describe('MerchantController', () => {
         });
 
         merchantController = new MerchantController();
+        merchantAuthService = new MerchantAuthService();
+        webhookService = new WebhookService();
         app.post('/register-merchant', asyncHandler((req, res) => merchantController.registerMerchant(req, res)));
         app.post('/register-webhook', asyncHandler((req, res) => merchantController.registerWebhook(req, res)));
         app.put('/update-webhook', asyncHandler((req, res) => merchantController.updateWebhook(req, res)));
@@ -50,7 +54,7 @@ describe('MerchantController', () => {
 
     describe('registerWebhook', () => {
         it('should register a webhook successfully', async () => {
-            (MerchantAuthService.getMerchantById as jest.Mock).mockResolvedValue({ id: 'merchant-123' });
+            (merchantAuthService.getMerchantById as jest.Mock).mockResolvedValue({ id: 'merchant-123' });
             (validateWebhookUrl as jest.Mock).mockReturnValue(true);
 
             const response = await request(app)
@@ -77,7 +81,7 @@ describe('MerchantController', () => {
 
     describe('updateWebhook', () => {
         it('should update a webhook successfully', async () => {
-            (WebhookService.getMerchantWebhook as jest.Mock).mockResolvedValue({
+            (webhookService.getMerchantWebhook as jest.Mock).mockResolvedValue({
                 id: 'webhook-123',
                 merchantId: 'merchant-123',
                 url: 'https://old-url.com',
@@ -109,7 +113,7 @@ describe('MerchantController', () => {
         });
 
         it('should return error if webhook does not exist', async () => {
-            jest.spyOn(WebhookService, 'getMerchantWebhook').mockResolvedValue(null);
+            (webhookService.getMerchantWebhook as jest.Mock).mockResolvedValue(null);
 
             const response = await request(app)
                 .put('/update-webhook')

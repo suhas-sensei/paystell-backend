@@ -16,6 +16,8 @@ describe('WebhookController', () => {
     let mockResponse: Partial<Response>;
     let responseJson: jest.Mock;
     let responseStatus: jest.Mock;
+    let merchantAuthService: MerchantAuthService;
+    let webhookService: WebhookService;
 
     const mockStellarPayload: StellarWebhookPayload = {
         id: 'webhook-123',
@@ -82,9 +84,11 @@ describe('WebhookController', () => {
         };
 
         webhookController = new WebhookController();
+        merchantAuthService = new MerchantAuthService();
+        webhookService = new WebhookService();
 
-        (MerchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
-        (WebhookService.getMerchantWebhook as jest.Mock).mockResolvedValue(mockMerchantWebhook);
+        (merchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
+        (webhookService.getMerchantWebhook as jest.Mock).mockResolvedValue(mockMerchantWebhook);
     });
 
     describe('handleWebhook', () => {
@@ -136,7 +140,7 @@ describe('WebhookController', () => {
         });
 
         it('should return 404 when merchant is not found', async () => {
-            (MerchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(null);
+            (merchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(null);
 
             await webhookController.handleWebhook(
                 mockRequest as Request,
@@ -150,7 +154,7 @@ describe('WebhookController', () => {
         });
 
         it('should return 404 when webhook is not found', async () => {
-            (WebhookService.getMerchantWebhook as jest.Mock).mockResolvedValue(null);
+            (webhookService.getMerchantWebhook as jest.Mock).mockResolvedValue(null);
 
             await webhookController.handleWebhook(
                 mockRequest as Request,
@@ -164,7 +168,7 @@ describe('WebhookController', () => {
         });
 
         it('should handle inactive merchants', async () => {
-            jest.spyOn(MerchantAuthService, 'getMerchantById').mockResolvedValue({
+            (merchantAuthService.getMerchantById as jest.Mock).mockResolvedValue({
                 ...mockMerchant,
                 isActive: false
             });

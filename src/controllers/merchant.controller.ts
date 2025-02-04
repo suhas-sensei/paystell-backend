@@ -5,6 +5,8 @@ import { Merchant, MerchantWebhook } from '../interfaces/webhook.interfaces';
 import { MerchantAuthService } from '../services/merchant.service';
 import { WebhookService } from '../services/webhook.service';
 
+const merchantAuthService = new MerchantAuthService()
+const webhookService = new WebhookService()
 
 export class MerchantController {
 
@@ -44,7 +46,7 @@ export class MerchantController {
     try {
       const { url } = req.body;
       const merchantId = req.merchant.id
-      const merchant = await MerchantAuthService.getMerchantById(merchantId);
+      const merchant = await merchantAuthService.getMerchantById(merchantId);
       // const secret = merchant?.secret
       // the middleware helped join it to our request headers
 
@@ -85,7 +87,7 @@ export class MerchantController {
       const { newUrl, merchantWebhookId } = req.body
       const merchantId = req.merchant.id
       // const merchant = await this.getMerchant(merchantId)
-      const existingWebhook = await WebhookService.getMerchantWebhook(merchantId)
+      const existingWebhook = await webhookService.getMerchantWebhook(merchantId)
       if (!existingWebhook) {
         return res.status(404).json({ error: 'No such webhook exists' })
       }

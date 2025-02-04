@@ -4,6 +4,7 @@ import { WebhookService } from "../services/webhook.service";
 import { Request, Response } from 'express'
 
 const webhookService = new WebhookService();
+const merchantAuthService = new MerchantAuthService()
 
 export class WebhookController {
 
@@ -14,14 +15,14 @@ export class WebhookController {
         try {
             const { payload }: StellarWebhookPayload = req.body
 
-            const merchant: Merchant | null = await MerchantAuthService.getMerchantById(payload.customer.id)
+            const merchant: Merchant | null = await merchantAuthService.getMerchantById(payload.customer.id)
             if (!merchant) {
                 return res.status(404).json({ error: "Merchant not found" })
             }
             if (!merchant.isActive) {
                 return res.status(404).json({ error: "Merchant not active" })
             }
-            const merchantWebhook: MerchantWebhook | null = await WebhookService.getMerchantWebhook(merchant.id)
+            const merchantWebhook: MerchantWebhook | null = await webhookService.getMerchantWebhook(merchant.id)
             if (!merchantWebhook) {
                 return res.status(404).json({ error: "Webhook not found" })
             }

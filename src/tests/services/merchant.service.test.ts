@@ -50,9 +50,9 @@ describe("MerchantAuthService", () => {
                 updatedAt: new Date(),
             };
 
-            jest.spyOn(MerchantAuthService, "getMerchantById").mockResolvedValue(mockMerchant);
+            (merchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
 
-            const result = await MerchantAuthService.getMerchantById("123");
+            const result = await merchantAuthService.getMerchantById("123");
             expect(result).toEqual(mockMerchant);
         });
 
@@ -68,7 +68,7 @@ describe("MerchantAuthService", () => {
                 updatedAt: new Date(),
             };
 
-            jest.spyOn(MerchantAuthService, "getMerchantById").mockImplementation(async (merchantId: string) => {
+            (merchantAuthService.getMerchantById as jest.Mock).mockImplementation(async (merchantId: string) => {
                 const merchant = mockMerchant;
                 if (!merchant.isActive) {
                     throw new Error("Merchant not found");
@@ -76,7 +76,7 @@ describe("MerchantAuthService", () => {
                 return merchant;
             });
 
-            await expect(MerchantAuthService.getMerchantById("123"))
+            await expect(merchantAuthService.getMerchantById("123"))
                 .rejects.toThrow("Merchant not found");
         });
     });
@@ -94,7 +94,7 @@ describe("MerchantAuthService", () => {
                 updatedAt: new Date(),
             };
 
-            jest.spyOn(merchantAuthService, "validateApiKey").mockResolvedValue(mockMerchant);
+            (merchantAuthService.validateApiKey as jest.Mock).mockResolvedValue(mockMerchant);
 
             const result = await merchantAuthService.validateApiKey("valid_api_key");
             expect(result).toEqual(mockMerchant);
@@ -112,7 +112,7 @@ describe("MerchantAuthService", () => {
                 updatedAt: new Date(),
             };
 
-            jest.spyOn(merchantAuthService, "validateApiKey").mockImplementation(async (apiKey: string) => {
+            (merchantAuthService.validateApiKey as jest.Mock).mockImplementation(async (apiKey: string) => {
                 const merchant = mockMerchant;
                 if (!merchant.isActive) {
                     throw new Error("Merchant does not exist or is not active");

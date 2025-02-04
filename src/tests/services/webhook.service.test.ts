@@ -4,6 +4,7 @@ import { WebhookService } from '../../services/webhook.service';
 import { MerchantAuthService } from '../../services/merchant.service';
 import { WebhookPayload, MerchantWebhook, Merchant } from '../../interfaces/webhook.interfaces';
 import { validateWebhookUrl } from '../../validators/webhook.validators';
+import { MerchantWebhookEntity } from 'src/entities/MerchantWebhook.entity';
 
 jest.mock('axios');
 jest.mock('crypto');
@@ -12,9 +13,11 @@ jest.mock('../../validators/webhook.validators');
 
 describe('WebhookService', () => {
     let webhookService: WebhookService;
+    let merchantAuthService: MerchantAuthService;
 
     beforeEach(() => {
         webhookService = new WebhookService();
+        merchantAuthService = new MerchantAuthService();
         jest.clearAllMocks();
     });
 
@@ -69,7 +72,7 @@ describe('WebhookService', () => {
 
     describe('sendWebhookNotification', () => {
         it('should send a webhook notification successfully', async () => {
-            (MerchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
+            (merchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
 
             const mockHmac = {
                 update: jest.fn().mockReturnThis(),
@@ -96,7 +99,7 @@ describe('WebhookService', () => {
         });
 
         it('should return false if webhook notification fails', async () => {
-            (MerchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
+            (merchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
 
             const mockHmac = {
                 update: jest.fn().mockReturnThis(),
@@ -119,15 +122,15 @@ describe('WebhookService', () => {
 
     describe('getMerchantWebhook', () => {
         it('should return a merchant webhook if it is active', async () => {
-            jest.spyOn(WebhookService, 'getMerchantWebhook').mockResolvedValue(mockMerchantWebhook);
+            (webhookService.getMerchantWebhook as jest.Mock).mockResolvedValue(mockMerchantWebhook);
 
-            const result = await WebhookService.getMerchantWebhook(mockMerchant.id);
+            const result = await webhookService.getMerchantWebhook(mockMerchant.id);
 
             expect(result).toEqual(mockMerchantWebhook);
         });
 
         it('should throw an error if webhook is inactive', async () => {
-            jest.spyOn(WebhookService, 'getMerchantWebhook').mockImplementation(async (merchantId: string) => {
+            (webhookService.getMerchantWebhook as jest.Mock).mockImplementation(async (merchantId: string) => {
                 const merchantWebhook = { ...mockMerchantWebhook, isActive: false };
                 if (!merchantWebhook.isActive) {
                     throw new Error('Merchant web hook not found');
@@ -136,7 +139,7 @@ describe('WebhookService', () => {
                 return merchantWebhook;
             })
 
-            await expect(WebhookService.getMerchantWebhook(mockMerchant.id)).rejects.toThrow(
+            await expect(webhookService.getMerchantWebhook(mockMerchant.id)).rejects.toThrow(
                 'Merchant web hook not found'
             );
         });
@@ -144,7 +147,7 @@ describe('WebhookService', () => {
 
     describe('notifyPaymentUpdate', () => {
         it('should send a webhook notification when merchant and webhook are valid', async () => {
-            (MerchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
+            (merchantAuthService.getMerchantById as jest.Mock).mockResolvedValue(mockMerchant);
             (validateWebhookUrl as jest.Mock).mockReturnValue(true);
             (webhookService as any).sendWebhookNotification = jest.fn().mockResolvedValue(true);
 

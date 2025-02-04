@@ -1,6 +1,6 @@
 import { Merchant, MerchantWebhook } from "../interfaces/webhook.interfaces";
 import { Repository } from "typeorm";
-import { MerchantEntity } from "src/entities/Merchant.entity";
+import { MerchantEntity } from "../entities/Merchant.entity";
 import AppDataSource from "../config/db";
 
 export class MerchantAuthService {
@@ -29,23 +29,22 @@ export class MerchantAuthService {
         }
     }
 
-    static async getMerchantById(id: string): Promise<Merchant | null> {
-        // replace with a method to find merchant from db by id
-        // const date = new Date()
-        // const merchant: Omit<Merchant, 'createdAt' & 'updatedAt'> = {
-        //     ...sampleMerchantWithoutId,
-        //     id,
-        // }
-        const merchant = this.merchantRepository.findOne({
-            where: {
-                id
+    async getMerchantById(id: string): Promise<Merchant | null> {
+        try {
+            const merchant = this.merchantRepository.findOne({
+                where: {
+                    id
+                }
+            })
+            if (!merchant) {
+                throw new Error('Merchant not found')
             }
-        })
-        if (!merchant) {
-            throw new Error('Merchant not found')
+            return merchant
+        } catch (err) {
+            console.error("Error in finding merchant: ", err)
+            return null
         }
 
-        return merchant
     }
 
     async validateApiKey(apiKey: string): Promise<Merchant | null> {
