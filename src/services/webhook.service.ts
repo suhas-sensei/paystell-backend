@@ -3,10 +3,18 @@ import crypto from 'crypto'
 import { WebhookPayload, MerchantWebhook, Merchant } from '../interfaces/webhook.interfaces'
 import { validateWebhookUrl } from '../validators/webhook.validators'
 import { MerchantAuthService } from './merchant.service';
-import { sampleWebhookWithoutMerchantId } from '../data/webhook.dummyData';
+import { Repository } from "typeorm";
+import AppDataSource from "../config/db";
+import { MerchantWebhookEntity } from 'src/entities/MerchantWebhook.entity';
 
 
 export class WebhookService {
+    private merchantWebhookrepository: Repository<MerchantWebhookEntity>
+
+    constructor() {
+        this.merchantWebhookrepository = AppDataSource.getRepository(MerchantWebhookEntity)
+    }
+
     private async generateSignature(payload: WebhookPayload, secret: string): Promise<string> {
         const hmac = crypto.createHmac('sha256', secret);
         hmac.update(JSON.stringify(payload))
@@ -38,16 +46,20 @@ export class WebhookService {
     }
 
     static async getMerchantWebhook(merchantId: string): Promise<MerchantWebhook | null> {
-        // replace with mechanism to find merchant webhook from merchant id.
-        // in the future, another argument can be added for the transaction type
-        const merchantWebhook: MerchantWebhook = {
-            ...sampleWebhookWithoutMerchantId,
-            merchantId,
+        try {
+            const merchantWebhook = this.merchantWebhookRepository.findOne({
+                where: {
+                    merchantId
+                }
+            })
+            if (!merchantWebhook.isActive) {
+                throw new Error('Merchant web hook not found')
+            }
+            return merchantWebhook
+        } catch (err) {
+            console.error('Failed to get merchant webhook', err)
+            return null
         }
-        if (!merchantWebhook.isActive) {
-            throw new Error('Merchant web hook not found')
-        }
-        return merchantWebhook
     }
 
     private async notifyPaymentUpdate(
