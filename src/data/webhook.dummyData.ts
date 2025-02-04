@@ -1,7 +1,7 @@
 // These dummy data is used in services concerning webhooks
 
 // To be used in getMerchantWebhook by merchantId
-const sampleWebhookWithoutMerchantId = {
+export const sampleWebhookWithoutMerchantId = {
     id: 'merchant-webhook-id',
     url: 'merchant-webhook-url',
     isActive: true,
@@ -10,7 +10,7 @@ const sampleWebhookWithoutMerchantId = {
 }
 
 // To be used in getMerchant by id
-const sampleMerchantWithoutId = {
+export const sampleMerchantWithoutId = {
     apiKey: 'random-api-key',
     name: 'random-merchant-name',
     email: 'randomMerchant@gmail.com',

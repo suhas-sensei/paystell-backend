@@ -1,14 +1,20 @@
 import request from 'supertest';
-import express, { Request, Response } from 'express';
+import express from 'express';
 import { MerchantController } from '../../controllers/merchant.controller';
 import { validateWebhookUrl } from '../../validators/webhook.validators';
 import { MerchantAuthService } from '../../services/merchant.service';
 import { WebhookService } from '../../services/webhook.service';
 import crypto from 'crypto';
+import { asyncHandler } from '../../middleware/auth';
 
 jest.mock('../../services/merchant.service');
 jest.mock('../../services/webhook.service');
 jest.mock('../../validators/webhook.validators');
+jest.mock('../../middleware/auth', () => ({
+    asyncHandler: (fn: any) => fn,
+    authenticateMerchant: (req: any, res: any, next: any) => next(),
+    authenticateStellarWebhook: (req: any, res: any, next: any) => next()
+}));
 
 describe('MerchantController', () => {
     let app: express.Application;
@@ -17,7 +23,16 @@ describe('MerchantController', () => {
     beforeEach(() => {
         app = express();
         app.use(express.json());
+
+        app.use((req, res, next) => {
+            req.merchant = { id: 'merchant-123' } as any;
+            next();
+        });
+
         merchantController = new MerchantController();
+        app.post('/register-merchant', asyncHandler((req, res) => merchantController.registerMerchant(req, res)));
+        app.post('/register-webhook', asyncHandler((req, res) => merchantController.registerWebhook(req, res)));
+        app.put('/update-webhook', asyncHandler((req, res) => merchantController.updateWebhook(req, res)));
     });
 
     describe('registerMerchant', () => {
@@ -94,13 +109,14 @@ describe('MerchantController', () => {
         });
 
         it('should return error if webhook does not exist', async () => {
-            (WebhookService.getMerchantWebhook as jest.Mock).mockResolvedValue(null);
+            jest.spyOn(WebhookService, 'getMerchantWebhook').mockResolvedValue(null);
 
             const response = await request(app)
                 .put('/update-webhook')
                 .send({ newUrl: 'https://new-url.com', merchantWebhookId: 'webhook-123' });
 
-            expect(response.status).toBe(500);
+            expect(response.status).toBe(404);
+            expect(response.body).toHaveProperty('error', 'No such webhook exists')
         });
     });
 });

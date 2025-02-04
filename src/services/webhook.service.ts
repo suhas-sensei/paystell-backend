@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import { WebhookPayload, MerchantWebhook, Merchant } from '../interfaces/webhook.interfaces'
 import { validateWebhookUrl } from '../validators/webhook.validators'
 import { MerchantAuthService } from './merchant.service';
+import { sampleWebhookWithoutMerchantId } from '../data/webhook.dummyData';
 
 
 export class WebhookService {
@@ -49,7 +50,7 @@ export class WebhookService {
         return merchantWebhook
     }
 
-    private async notifyPaymentUpdate (
+    private async notifyPaymentUpdate(
         merchantWebhook: MerchantWebhook,
         paymentDetails: Omit<WebhookPayload, 'timestamp'>
     ): Promise<boolean> {

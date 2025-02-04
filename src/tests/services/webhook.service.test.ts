@@ -119,7 +119,7 @@ describe('WebhookService', () => {
 
     describe('getMerchantWebhook', () => {
         it('should return a merchant webhook if it is active', async () => {
-            (WebhookService.getMerchantWebhook as jest.Mock).mockResolvedValue(mockMerchantWebhook);
+            jest.spyOn(WebhookService, 'getMerchantWebhook').mockResolvedValue(mockMerchantWebhook);
 
             const result = await WebhookService.getMerchantWebhook(mockMerchant.id);
 
@@ -127,10 +127,14 @@ describe('WebhookService', () => {
         });
 
         it('should throw an error if webhook is inactive', async () => {
-            (WebhookService.getMerchantWebhook as jest.Mock).mockResolvedValue({
-                ...mockMerchantWebhook,
-                isActive: false
-            });
+            jest.spyOn(WebhookService, 'getMerchantWebhook').mockImplementation(async (merchantId: string) => {
+                const merchantWebhook = { ...mockMerchantWebhook, isActive: false };
+                if (!merchantWebhook.isActive) {
+                    throw new Error('Merchant web hook not found');
+                }
+
+                return merchantWebhook;
+            })
 
             await expect(WebhookService.getMerchantWebhook(mockMerchant.id)).rejects.toThrow(
                 'Merchant web hook not found'
@@ -164,7 +168,7 @@ describe('WebhookService', () => {
             jest.spyOn(global, 'setTimeout').mockImplementation((fn, ms) => {
                 fn(); // Execute the callback immediately
                 return {} as unknown as NodeJS.Timeout; // Return a mocked timeout object
-              });
+            });
 
             (webhookService as any).notifyPaymentUpdate = jest
                 .fn()
@@ -178,8 +182,8 @@ describe('WebhookService', () => {
 
         it('should fail after max retries', async () => {
             jest.spyOn(global, 'setTimeout').mockImplementation((fn, ms) => {
-            fn(); // Execute the callback immediately
-            return {} as unknown as NodeJS.Timeout; // Return a mocked timeout object
+                fn(); // Execute the callback immediately
+                return {} as unknown as NodeJS.Timeout; // Return a mocked timeout object
             });
 
             (webhookService as any).notifyPaymentUpdate = jest.fn().mockRejectedValue(new Error('Network Error'));

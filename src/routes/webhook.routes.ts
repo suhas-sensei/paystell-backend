@@ -10,9 +10,9 @@ const webhookController = new WebhookController()
 router.post(
     '/webhooks/register', authenticateMerchant, asyncHandler(merchantController.registerWebhook)
 )
-.put(
-    '/webhooks/register:id', authenticateMerchant, asyncHandler(merchantController.updateWebhook) 
-)
+    .put(
+        '/webhooks/register:id', authenticateMerchant, asyncHandler(merchantController.updateWebhook)
+    )
 router.post(
     '/webhooks/stellar', authenticateStellarWebhook, asyncHandler(webhookController.handleWebhook)
 )

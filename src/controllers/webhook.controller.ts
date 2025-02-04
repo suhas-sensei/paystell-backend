@@ -7,7 +7,7 @@ const webhookService = new WebhookService();
 
 export class WebhookController {
 
-    async handleWebhook (
+    async handleWebhook(
         req: Request, res: Response
     ) {
         const response = res
@@ -15,9 +15,16 @@ export class WebhookController {
             const { payload }: StellarWebhookPayload = req.body
 
             const merchant: Merchant | null = await MerchantAuthService.getMerchantById(payload.customer.id)
-            if (!merchant) return
+            if (!merchant) {
+                return res.status(404).json({ error: "Merchant not found" })
+            }
+            if (!merchant.isActive) {
+                return res.status(404).json({ error: "Merchant not active" })
+            }
             const merchantWebhook: MerchantWebhook | null = await WebhookService.getMerchantWebhook(merchant.id)
-            if (!merchantWebhook) return
+            if (!merchantWebhook) {
+                return res.status(404).json({ error: "Webhook not found" })
+            }
             const webhookPayload: WebhookPayload = {
                 transactionId: payload.transaction.id,
                 transactionType: payload.transaction.type,
@@ -29,10 +36,11 @@ export class WebhookController {
                 eventType: `${payload.transaction.type}.${payload.transaction.status}`,
             }
             // webhookService.notifyPaymentUpdate(merchantWebhook, webhookPayload)
-            webhookService.notifyWithRetry(merchantWebhook, webhookPayload)
+            await webhookService.notifyWithRetry(merchantWebhook, webhookPayload)
+            return res.status(200).json({ message: "Webhook processed successfully" })
         } catch (err) {
             console.error("Webhook error: ", err);
-            return res.status(500).json({error: "Webhook error"})
+            return res.status(500).json({ error: "Webhook error" })
         }
     }
 }

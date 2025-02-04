@@ -33,8 +33,8 @@ export type Merchant = {
     updatedAt: Date;
 }
 
-const transactionStatusValues =  ['incomplete', 'completed', 'refunded', 'expired', 'error', 'pending_stellar', 'pending_external', 'pending_user_transfer_start', 'pending_user_transfer_complete', 'pending_anchor', 'pending_trust', 'pending_user', 'no_market', 'too_small', 'too_large'] as const
-type TransactionStatus = (typeof transactionStatusValues)[number]
+const transactionStatusValues = ['incomplete', 'completed', 'refunded', 'expired', 'error', 'pending_stellar', 'pending_external', 'pending_user_transfer_start', 'pending_user_transfer_complete', 'pending_anchor', 'pending_trust', 'pending_user', 'no_market', 'too_small', 'too_large'] as const
+export type TransactionStatus = (typeof transactionStatusValues)[number]
 
 export interface StellarWebhookPayload {
     id: string;
@@ -63,11 +63,11 @@ export interface StellarWebhookPayload {
                 total: string;
                 asset: string;
                 details?: [
-                {
-                    name: string;
-                    amount: string;
-                    description?: string;
-                }
+                    {
+                        name: string;
+                        amount: string;
+                        description?: string;
+                    }
                 ];
             };
             quote_id?: string;
@@ -87,42 +87,42 @@ export interface StellarWebhookPayload {
                     asset: string;
                 };
                 payments?: [
-                {
-                    id?: string;
-                    id_type?: "stellar" | "external";
-                    amount?: {
-                        amount: string;
-                        asset: string;
-                    };
-                    fee?: {
-                        amount: string;
-                        asset: string;
-                    };
-                    requested_at?: Date;
-                    refunded_at?: Date;
-                }
+                    {
+                        id?: string;
+                        id_type?: "stellar" | "external";
+                        amount?: {
+                            amount: string;
+                            asset: string;
+                        };
+                        fee?: {
+                            amount: string;
+                            asset: string;
+                        };
+                        requested_at?: Date;
+                        refunded_at?: Date;
+                    }
                 ];
             };
             stellar_transactions?: [
-            {
-                id: string;
-                memo?: string;
-                memo_type?: "text" | "hash" | "id";
-                created_at: Date;
-                envelope: string;
-                payments: [
                 {
                     id: string;
-                    payment_type: "payment" | "path_payment";
-                    source_account: string;
-                    destination_account: string;
-                    amount: {
-                        amount: string;
-                        asset: string;
-                    };
+                    memo?: string;
+                    memo_type?: "text" | "hash" | "id";
+                    created_at: Date;
+                    envelope: string;
+                    payments: [
+                        {
+                            id: string;
+                            payment_type: "payment" | "path_payment";
+                            source_account: string;
+                            destination_account: string;
+                            amount: {
+                                amount: string;
+                                asset: string;
+                            };
+                        }
+                    ];
                 }
-                ];
-            }
             ];
             source_account?: string;
             destination_account: string;
