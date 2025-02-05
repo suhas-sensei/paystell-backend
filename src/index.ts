@@ -12,4 +12,5 @@ try {
     console.log(error);
 }
 }
+
 main();
