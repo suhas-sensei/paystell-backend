@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from "typeorm";
 import { User } from "./User";
 
 @Entity()
@@ -24,4 +24,12 @@ export class TwoFactorAuth {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @BeforeInsert()
+    @BeforeUpdate()
+    encryptSecret() {
+        // if (this.secret) {
+        //     this.secret = crypto.createHmac("sha256", process.env.SECRET_KEY!).update(this.secret).digest("hex");
+        // }
+    }
 }
