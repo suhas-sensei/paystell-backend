@@ -17,19 +17,21 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-        return res.status(401).json({ 
+        res.status(401).json({ 
             status: 'error',
             message: 'No token provided',
             code: 'NO_TOKEN'
         });
+        return;
     }
 
     if (!authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ 
+        res.status(401).json({ 
             status: 'error',
             message: 'Invalid token format',
             code: 'INVALID_FORMAT'
         });
+        return;
     }
 
     const token = authHeader.split(" ")[1];
@@ -54,19 +56,19 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
         next();
     } catch (error) {
         if (error instanceof TokenExpiredError) {
-            return res.status(401).json({
+            res.status(401).json({
                 status: 'error',
                 message: "Token has expired",
                 code: 'TOKEN_EXPIRED'
             });
         } else if (error instanceof JsonWebTokenError) {
-            return res.status(401).json({
+            res.status(401).json({
                 status: 'error',
                 message: "Invalid token",
                 code: 'INVALID_TOKEN'
             });
         } else {
-            return res.status(401).json({
+            res.status(401).json({
                 status: 'error',
                 message: 'Token validation failed',
                 code: 'TOKEN_VALIDATION_FAILED'
