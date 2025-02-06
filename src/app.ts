@@ -20,8 +20,6 @@ startExpiredSessionCleanupCronJobs();
 app.use("/session", sessionRouter);
 app.use("/email-verification", emailVerification);
 app.use("/paymentlink", PaymentRoute);
-
-// Integrate authentication and 2FA routes
 app.use('/auth', authRoutes);
 
 export default app;
