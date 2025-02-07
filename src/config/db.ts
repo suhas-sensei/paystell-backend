@@ -12,9 +12,6 @@ const AppDataSource = new DataSource({
     database: process.env.POSTGRES_DATABASE,
     synchronize: true,
     logging: false,
-    ssl: {
-        rejectUnauthorized: false,
-    },
     entities: [__dirname + '/../entities/*.ts'],
     migrations: [__dirname + '/../migrations/*.ts'],
 });

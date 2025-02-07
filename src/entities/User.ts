@@ -1,5 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert } from "typeorm";
 import { hash } from "bcrypt";
+import { Session } from "./Session";
+import { EmailVerification } from "./emailVerification"
 
 @Entity('users')
 export class User {
@@ -27,4 +29,12 @@ export class User {
             this.password = await hash(this.password, 10);
         }
     }
+    @Column({ default: false })
+    isEmailVerified!: boolean;
+  
+    @OneToMany(() => EmailVerification, (emailVerification) => emailVerification.user)
+    emailVerifications!: EmailVerification[];
+
+    @OneToMany(() => Session, (session) => session.user)
+    sessions!: Session[];
 }
