@@ -8,7 +8,7 @@ export class CreateUserDTO {
   @IsEmail()
   email!: string;
 
-  @Length(6, 15)
+  @Length(6, 15) // password length between 6 and 15
   password!: string;
 
   @IsOptional()

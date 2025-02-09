@@ -10,7 +10,7 @@ export class UpdateUserDTO {
   email?: string;
 
   @IsOptional()
-  @Length(6, 25)
+  @Length(6, 15)// password length between 6 and 15
   password?: string;
 
   @IsOptional()

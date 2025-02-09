@@ -4,6 +4,7 @@ import { User } from '../entities/User';
 import { validate } from 'class-validator';
 import { CreateUserDTO } from '../dtos/CreateUserDTO';
 import { UpdateUserDTO } from '../dtos/UpdateUserDTO';
+import { hash } from 'bcrypt';
 
 export class UserService {
   private userRepository: Repository<User>;
@@ -38,7 +39,18 @@ export class UserService {
     if (!user) {
       throw new Error('User not found');
     }
-
+  
+    if (data.email && data.email !== user.email) {
+      const existingUser = await this.userRepository.findOneBy({ email: data.email });
+      if (existingUser) {
+        throw new Error('Email already exists');
+      }
+    }
+  
+    if (data.password) {
+      data.password = await hash(data.password, 10);
+    }
+  
     Object.assign(user, data);
     return await this.userRepository.save(user);
   }
