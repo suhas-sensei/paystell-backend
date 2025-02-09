@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, Length, IsEnum } from "class-validator";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,OneToMany, UpdateDateColumn, BeforeInsert } from "typeorm";
 import { UserRole } from "../enums/UserRole"
 import { Session } from "./Session";
 import { hash } from "bcrypt";
@@ -18,7 +18,7 @@ export class User {
     email!: string
 
     @Column()
-    @Length(6, 15) // could vary
+    @Length(70) // could vary save a hash
     password!: string
 
     @Column({ 
