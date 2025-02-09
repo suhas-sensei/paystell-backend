@@ -6,4 +6,7 @@ module.exports = {
     "^.+\\.ts$": "ts-jest"
   },
   moduleFileExtensions: ["ts", "js", "json", "node"],
+  moduleNameMapper: {
+    "nodemailer": "<rootDir>/src/__mocks__/nodemailer.ts",
+  },
 };
