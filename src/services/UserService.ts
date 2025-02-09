@@ -40,7 +40,7 @@ export class UserService {
       throw new Error('User not found');
     }
   
-    if (data.email && data.email !== user.email) {
+    if (data.email && (data.email !== user.email)) {
       const existingUser = await this.userRepository.findOneBy({ email: data.email });
       if (existingUser) {
         throw new Error('Email already exists');

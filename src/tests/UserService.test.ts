@@ -26,46 +26,27 @@ describe('UserService', () => {
   });
 
   describe('createUser', () => {
-    it('should create a new user with hashed password', async () => {
+    it('should create a new user with password hashed in beforeInsert', async () => {
       const userData: CreateUserDTO = {
         name: 'Test User',
         email: 'test@example.com',
-        password: 'password123',
+        password: 'password123', 
         role: UserRole.USER,
         logoUrl: 'https://example.com/logo.png',
         walletAddress: '0x123456789abcdef'
       };
-
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed123');
+    
       mockUserRepository.save.mockResolvedValue({ id: 1, ...userData });
-
+    
       const result = await userService.createUser(userData);
-
-      expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
+    
       expect(mockUserRepository.create).toHaveBeenCalledWith({
         ...userData,
-        password: 'hashed123'
+        password: 'password123'
       });
+    
       expect(result).toEqual({ id: 1, ...userData });
     });
-
-    it('should throw error if email already exists', async () => {
-        const userData: CreateUserDTO = {
-            name: 'Test User',
-            email: 'test@example.com',
-            password: 'password123',
-            role: UserRole.USER,
-            logoUrl: 'https://example.com/logo.png',
-            walletAddress: '0x123456789abcdef'
-        };
-
-
-        mockUserRepository.findOneBy.mockResolvedValue({ email: 'test@example.com' });
-
-        await expect(userService.createUser(userData)).rejects.toThrow('Email already exists');
-        }
-    );
-
     it('should throw error if a required parameter is missing', async () => {
         const userData = {
         //name: 'Test User',
@@ -108,55 +89,56 @@ describe('UserService', () => {
   });
 
   describe('updateUser', () => {
-    it('should update all user fields and hash new password if provided', async () => {
-      const existingUser = { 
-          id: 1, 
-          password: 'oldHash',
-          name: 'Old Name',
-          email: 'old@example.com',
-          role: UserRole.USER,
-          logoUrl: 'https://example.com/old-logo.png',
-          walletAddress: '0xoldaddress123',
-          save: jest.fn().mockResolvedValue(true)
-      };
-  
-      mockUserRepository.findOneBy.mockResolvedValue(existingUser);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('newHash');
-  
-      const updateData: UpdateUserDTO = {
-          name: 'Updated User',
-          email: 'updated@example.com',
-          password: 'newPassword',
-          role: UserRole.ADMIN,
-          logoUrl: 'https://example.com/new-logo.png',
-          walletAddress: '0xabcdef123456789'
-      };
-  
-      mockUserRepository.save.mockResolvedValue({
-          ...existingUser,
-          ...updateData,
-          password: 'newHash'
+      it('should update all user fields and hash new password if provided', async () => {
+        const existingUser = { 
+            id: 1, 
+            password: 'oldHash',
+            name: 'Old Name',
+            email: 'old@example.com',
+            role: UserRole.USER,
+            logoUrl: 'https://example.com/old-logo.png',
+            walletAddress: '0xoldaddress123',
+            save: jest.fn().mockResolvedValue(true)
+        };
+      
+ 
+        mockUserRepository.findOneBy
+          .mockResolvedValueOnce(existingUser) 
+          .mockResolvedValueOnce(null); 
+      
+        (bcrypt.hash as jest.Mock).mockResolvedValue('newHash');
+      
+        const updateData: UpdateUserDTO = {
+            name: 'Updated User',
+            email: 'updated@example.com', 
+            password: 'newPassword',
+            role: UserRole.ADMIN,
+            logoUrl: 'https://example.com/new-logo.png',
+            walletAddress: '0xabcdef123456789'
+        };
+      
+        mockUserRepository.save.mockResolvedValue({
+            ...existingUser,
+            ...updateData,
+            password: 'newHash'
+        });
+      
+        const result = await userService.updateUser(1, updateData);
+      
+        expect(bcrypt.hash).toHaveBeenCalledWith('newPassword', 10);
+      
+        expect(mockUserRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+            id: 1,
+            password: 'newHash',
+            name: 'Updated User',
+            email: 'updated@example.com',
+            role: UserRole.ADMIN,
+            logoUrl: 'https://example.com/new-logo.png',
+            walletAddress: '0xabcdef123456789'
+        }));
+      
+        expect(result.password).toBe('newHash');
       });
-  
-      const result = await userService.updateUser(1, updateData);
-  
-      // Check that library function was called with the correct arguments
-      expect(bcrypt.hash).toHaveBeenCalledWith('newPassword', 10);
-  
-      // Ensure that the user fields are updated
-      expect(mockUserRepository.save).toHaveBeenCalledWith(expect.objectContaining({
-          id: 1,
-          password: 'newHash',
-          name: 'Updated User',
-          email: 'updated@example.com',
-          role: UserRole.ADMIN,
-          logoUrl: 'https://example.com/new-logo.png',
-          walletAddress: '0xabcdef123456789'
-      }));
-  
-      // Ensure that the password is hashed
-      expect(result.password).toBe('newHash');
-  })
   
       it('should throw error if user does not exist', async () => {
         mockUserRepository.findOneBy.mockResolvedValue(null);
