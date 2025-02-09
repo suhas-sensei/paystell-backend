@@ -26,10 +26,23 @@ describe('UserController', () => {
   });
 
   it('should create a new user', async () => {
-    const userData = { name: 'Test', email: 'test@example.com', password: 'password123', role:  UserRole.USER , logoUrl: 'https://example.com/logo.png', walletAddress: '0x123456789abcdef' , isEmailVerified: false, isWalletVerified: false , createdAt: new Date(), updatedAt: new Date() };
+    const userData = { 
+      name: 'Test', 
+      email: 'test@example.com', 
+      password: 'password123', 
+      role: UserRole.USER, 
+      logoUrl: 'https://example.com/logo.png', 
+      walletAddress: '0x123456789abcdef', 
+      isEmailVerified: false, 
+      isWalletVerified: false, 
+      createdAt: new Date(), 
+      updatedAt: new Date(), 
+      hashPassword: jest.fn(), 
+      emailVerifications: [], 
+      sessions: []        
+    };
     const createdUser = { id: 1, ...userData };
-    
-    
+
     userService.createUser.mockResolvedValue(createdUser);
     req.body = userData;
 
@@ -43,7 +56,21 @@ describe('UserController', () => {
   });
 
   it('should get a user by id', async () => {
-    const userData = { name: 'Test', email: 'test@example.com', password: 'password123', role:  UserRole.USER , logoUrl: 'https://example.com/logo.png', walletAddress: '0x123456789abcdef' , isEmailVerified: false, isWalletVerified: false , createdAt: new Date(), updatedAt: new Date() };
+    const userData = { 
+      name: 'Test', 
+      email: 'test@example.com', 
+      password: 'password123', 
+      role: UserRole.USER, 
+      logoUrl: 'https://example.com/logo.png', 
+      walletAddress: '0x123456789abcdef', 
+      isEmailVerified: false, 
+      isWalletVerified: false, 
+      createdAt: new Date(), 
+      updatedAt: new Date(), 
+      hashPassword: jest.fn(), 
+      emailVerifications: [], 
+      sessions: []        
+    };
     const user = { id: 1, ...userData };
 
     userService.getUserById.mockResolvedValue(user);
@@ -56,32 +83,45 @@ describe('UserController', () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(mutableUser);
-    });
+  });
 
-    it('should update a user', async () => {
-        const userData = { name: 'Test', email: 'test@example.com', password: 'password123', role:  UserRole.USER , logoUrl: 'https://example.com/logo.png', walletAddress: '0x123456789abcdef' , isEmailVerified: false, isWalletVerified: false , createdAt: new Date(), updatedAt: new Date() };
-        const updatedUser = { id: 1, ...userData };
+  it('should update a user', async () => {
+    const userData = { 
+      name: 'Test', 
+      email: 'test@example.com', 
+      password: 'password123', 
+      role: UserRole.USER, 
+      logoUrl: 'https://example.com/logo.png', 
+      walletAddress: '0x123456789abcdef', 
+      isEmailVerified: false, 
+      isWalletVerified: false, 
+      createdAt: new Date(), 
+      updatedAt: new Date(), 
+      hashPassword: jest.fn(), 
+      emailVerifications: [], 
+      sessions: []        
+    };
+    const updatedUser = { id: 1, ...userData };
 
-        userService.updateUser.mockResolvedValue(updatedUser);
-        req.params = { id: '1' };
-        req.body = userData;
+    userService.updateUser.mockResolvedValue(updatedUser);
+    req.params = { id: '1' };
+    req.body = userData;
 
-        await userController.updateUser(req as Request, res as Response);
+    await userController.updateUser(req as Request, res as Response);
 
-        const mutableUser: Partial<User> = { ...updatedUser };
-        delete mutableUser.password;
+    const mutableUser: Partial<User> = { ...updatedUser };
+    delete mutableUser.password;
 
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith(mutableUser);
-    });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(mutableUser);
+  });
 
+  it('should delete a user', async () => {
+    req.params = { id: '1' };
 
-    it('should delete a user', async () => {
-        req.params = { id: '1' };
+    await userController.deleteUser(req as Request, res as Response);
 
-        await userController.deleteUser(req as Request, res as Response);
-
-        expect(res.status).toHaveBeenCalledWith(204);
-        expect(res.send).toHaveBeenCalled();
-    });
+    expect(res.status).toHaveBeenCalledWith(204);
+    expect(res.send).toHaveBeenCalled();
+  });
 });
