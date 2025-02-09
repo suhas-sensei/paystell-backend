@@ -1,8 +1,9 @@
 import { IsEmail, IsNotEmpty, Length, IsEnum } from "class-validator";
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn} from "typeorm" //OneToOne } from "typeorm" 
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert } from "typeorm";
 import { UserRole } from "../enums/UserRole"
-//import { TwoFactorAuth } from "./TwoFactorAuth"
-
+import { Session } from "./Session";
+import { hash } from "bcrypt";
+import { EmailVerification } from "./emailVerification"
 @Entity()
 export class User {
     @PrimaryGeneratedColumn()
@@ -37,15 +38,23 @@ export class User {
     @Column({ nullable: true })
     walletAddress?: string
 
+    @BeforeInsert()
+    async hashPassword() {
+        if (this.password) {
+            this.password = await hash(this.password, 10);
+        }
+    }
     @Column({ default: false })
-    isEmailVerified!: boolean
+    isEmailVerified!: boolean;
+  
+    @OneToMany(() => EmailVerification, (emailVerification) => emailVerification.user)
+    emailVerifications!: EmailVerification[];
+
+    @OneToMany(() => Session, (session) => session.user)
+    sessions!: Session[];
 
     @Column({ default: false })
     isWalletVerified!: boolean
-
-    //Implement once TwoFactorAuth entity is created
-    // @OneToOne(() => TwoFactorAuth, tfa => tfa.user)
-    // twoFactorAuth!: TwoFactorAuth
 
     @CreateDateColumn()
     createdAt!: Date
