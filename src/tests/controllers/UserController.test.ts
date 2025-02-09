@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { UserController } from '../controllers/UserController';
-import { UserService } from '../services/UserService';
-import { UserRole } from '../enums/UserRole';
-import { User } from '../entities/User';
+import { UserController } from '../../controllers/UserController';
+import { UserService } from '../../services/UserService';
+import { UserRole } from '../../enums/UserRole';
+import { User } from '../../entities/User';
 
 jest.mock('../services/UserService');
 

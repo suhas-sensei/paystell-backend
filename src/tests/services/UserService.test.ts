@@ -1,9 +1,9 @@
-import { UserService } from '../services/UserService';
-import { UserRole } from '../enums/UserRole';
-import AppDataSource from '../config/db';
+import { UserService } from '../../services/UserService';
+import { UserRole } from '../../enums/UserRole';
+import AppDataSource from '../../config/db';
 import bcrypt from 'bcrypt';
-import { CreateUserDTO } from '../dtos/CreateUserDTO';
-import { UpdateUserDTO } from '../dtos/UpdateUserDTO';
+import { CreateUserDTO } from '../../dtos/CreateUserDTO';
+import { UpdateUserDTO } from '../../dtos/UpdateUserDTO';
 
 jest.mock('../config/db');
 jest.mock('bcrypt');
