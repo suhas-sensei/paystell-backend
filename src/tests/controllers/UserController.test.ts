@@ -4,7 +4,7 @@ import { UserService } from '../../services/UserService';
 import { UserRole } from '../../enums/UserRole';
 import { User } from '../../entities/User';
 
-jest.mock('../services/UserService');
+jest.mock('../../services/UserService');
 
 describe('UserController', () => {
   let userController: UserController;
