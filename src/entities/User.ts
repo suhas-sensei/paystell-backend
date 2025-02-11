@@ -1,27 +1,42 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert } from "typeorm";
-import { hash } from "bcrypt";
+import { IsEmail, IsNotEmpty, Length, IsEnum } from "class-validator";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,OneToMany, UpdateDateColumn, BeforeInsert } from "typeorm";
+import { UserRole } from "../enums/UserRole"
 import { Session } from "./Session";
+import { hash } from "bcrypt";
 import { EmailVerification } from "./emailVerification"
-
-@Entity('users')
+@Entity()
 export class User {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number
 
-    @Column({ type: 'varchar', length: 100 })
-    name: string;
+    @Column()
+    @IsNotEmpty()
+    name!: string
 
-    @Column({ type: 'varchar', length: 255, unique: true })
-    email: string;
+    @Column({ unique: true })
+    @IsEmail()
+    email!: string
 
-    @Column({ type: 'varchar', length: 255 })
-    password: string;
+    @Column()
+    @Length(70) // could vary save a hash
+    password!: string
 
-    @CreateDateColumn({ type: 'timestamp' })
-    createdAt: Date;
+    @Column({ 
+         type: 'enum',
+         enum: UserRole,
+         default: UserRole.USER
+     })
+    @IsEnum(UserRole)
+    role!: UserRole
 
-    @UpdateDateColumn({ type: 'timestamp' })
-    updatedAt: Date;
+    @Column({ nullable: true })
+    description?: string
+
+    @Column({ nullable: true })
+    logoUrl?: string
+
+    @Column({ nullable: true })
+    walletAddress?: string
 
     @BeforeInsert()
     async hashPassword() {
@@ -37,4 +52,13 @@ export class User {
 
     @OneToMany(() => Session, (session) => session.user)
     sessions!: Session[];
+
+    @Column({ default: false })
+    isWalletVerified!: boolean
+
+    @CreateDateColumn()
+    createdAt!: Date
+
+    @UpdateDateColumn()
+    updatedAt!: Date
 }
