@@ -2,12 +2,12 @@ import * as speakeasy from "speakeasy";
 
 export const verifyTwoFactorCode = (token: string, secret: string): boolean => {
     if (!secret) {
-        return false;  // Si no hay secreto, no puede ser válido
+        return false;  // If there's no secret, it can't be valid
     }
     return speakeasy.totp.verify({
-        secret,  // El secreto almacenado en la base de datos
-        encoding: "base32",  // El formato en el que se almacena el secreto
-        token,  // El código proporcionado por el usuario
+        secret,  // The secret stored in the database
+        encoding: "base32",  // The format in which the secret is stored
+        token,  // The code provided by the user
         window: 1,
     });
 };
