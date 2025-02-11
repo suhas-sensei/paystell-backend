@@ -1,31 +1,47 @@
+import { IsEmail, IsNotEmpty, Length, IsEnum } from "class-validator";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, OneToOne, OneToMany } from "typeorm";
+import { UserRole } from "../enums/UserRole";
 import { Session } from "./Session";
-import { EmailVerification } from "./emailVerification"
-import { hash } from "bcryptjs";
+import { EmailVerification } from "./emailVerification";
 import { TwoFactorAuth } from "./TwoFactorAuth";
+import { hash } from "bcryptjs";
 
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
-    @Column({ type: 'varchar', length: 100 })
-    name: string;
+    @Column()
+    @IsNotEmpty()
+    name!: string;
 
-    @Column({ type: 'varchar', length: 255, unique: true })
-    email: string;
+    @Column({ unique: true })
+    @IsEmail()
+    email!: string;
 
-    @Column({ type: 'varchar', length: 255 })
-    password: string;
+    @Column()
+    @Length(70) // could vary save a hash
+    password!: string;
+
+    @Column({ 
+        type: 'enum',
+        enum: UserRole,
+        default: UserRole.USER
+    })
+    @IsEnum(UserRole)
+    role!: UserRole;
+
+    @Column({ nullable: true })
+    description?: string;
 
     @OneToOne(() => TwoFactorAuth, (tfa) => tfa.user, { cascade: true, eager: true })
     twoFactorAuth: TwoFactorAuth;
 
-    @CreateDateColumn({ type: 'timestamp' })
-    createdAt: Date;
+    @Column({ nullable: true })
+    logoUrl?: string;
 
-    @UpdateDateColumn({ type: 'timestamp' })
-    updatedAt: Date;
+    @Column({ nullable: true })
+    walletAddress?: string;
 
     @BeforeInsert()
     async hashPassword() {
@@ -33,12 +49,22 @@ export class User {
             this.password = await hash(this.password, 10);
         }
     }
+
     @Column({ default: false })
     isEmailVerified!: boolean;
-  
+
     @OneToMany(() => EmailVerification, (emailVerification) => emailVerification.user)
     emailVerifications!: EmailVerification[];
 
     @OneToMany(() => Session, (session) => session.user)
     sessions!: Session[];
+
+    @Column({ default: false })
+    isWalletVerified!: boolean;
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 }
