@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import DataSource from '../config/db';
-import { EmailVerification } from '../entities/EmailVerification';
+import { EmailVerification } from '../entities/emailVerification';
 import { User } from '../entities/User';
 import { sendVerificationEmail } from '../utils/sendVerificationEmail';
 import { verifyToken, generateVerificationToken } from '../utils/token';
@@ -14,7 +14,7 @@ class EmailVerificationService {
     this.userRepository = DataSource.getRepository(User);
   }
 
-  async sendVerificationEmail(email: string, userId: string): Promise<void> {
+  async sendVerificationEmail(email: string, userId: number): Promise<void> {
     const token = generateVerificationToken(email);
 
     const verificationEntry = this.emailVerificationRepository.create({

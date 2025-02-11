@@ -1,6 +1,6 @@
 import EmailVerificationService from "../services/emailVerification.service";
 import { Repository } from "typeorm";
-import { EmailVerification } from "../entities/EmailVerification";
+import { EmailVerification } from "../entities/emailVerification";
 import { User } from "../entities/User";
 import { sendVerificationEmail } from "../utils/sendVerificationEmail";
 import { verifyToken, generateVerificationToken } from "../utils/token";

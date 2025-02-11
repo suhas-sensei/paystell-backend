@@ -1,42 +1,47 @@
 import { IsEmail, IsNotEmpty, Length, IsEnum } from "class-validator";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,OneToMany, UpdateDateColumn, BeforeInsert } from "typeorm";
-import { UserRole } from "../enums/UserRole"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, OneToOne, OneToMany } from "typeorm";
+import { UserRole } from "../enums/UserRole";
 import { Session } from "./Session";
-import { hash } from "bcrypt";
-import { EmailVerification } from "./emailVerification"
-@Entity()
+import { EmailVerification } from "./emailVerification";
+import { TwoFactorAuth } from "./TwoFactorAuth";
+import { hash } from "bcryptjs";
+
+@Entity('users')
 export class User {
     @PrimaryGeneratedColumn()
-    id!: number
+    id!: number;
 
     @Column()
     @IsNotEmpty()
-    name!: string
+    name!: string;
 
     @Column({ unique: true })
     @IsEmail()
-    email!: string
+    email!: string;
 
     @Column()
     @Length(70) // could vary save a hash
-    password!: string
+    password!: string;
 
     @Column({ 
-         type: 'enum',
-         enum: UserRole,
-         default: UserRole.USER
-     })
+        type: 'enum',
+        enum: UserRole,
+        default: UserRole.USER
+    })
     @IsEnum(UserRole)
-    role!: UserRole
+    role!: UserRole;
 
     @Column({ nullable: true })
-    description?: string
+    description?: string;
+
+    @OneToOne(() => TwoFactorAuth, (tfa) => tfa.user, { cascade: true, eager: true })
+    twoFactorAuth: TwoFactorAuth;
 
     @Column({ nullable: true })
-    logoUrl?: string
+    logoUrl?: string;
 
     @Column({ nullable: true })
-    walletAddress?: string
+    walletAddress?: string;
 
     @BeforeInsert()
     async hashPassword() {
@@ -44,9 +49,10 @@ export class User {
             this.password = await hash(this.password, 10);
         }
     }
+
     @Column({ default: false })
     isEmailVerified!: boolean;
-  
+
     @OneToMany(() => EmailVerification, (emailVerification) => emailVerification.user)
     emailVerifications!: EmailVerification[];
 
@@ -54,11 +60,11 @@ export class User {
     sessions!: Session[];
 
     @Column({ default: false })
-    isWalletVerified!: boolean
+    isWalletVerified!: boolean;
 
     @CreateDateColumn()
-    createdAt!: Date
+    createdAt!: Date;
 
     @UpdateDateColumn()
-    updatedAt!: Date
+    updatedAt!: Date;
 }
