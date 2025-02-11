@@ -11,8 +11,8 @@ const AppDataSource = new DataSource({
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DATABASE,
     synchronize: true,
-    logging: process.env.NODE_ENV === 'development',  // Solo loguea en desarrollo
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,  // Usa SSL solo en producción
+    logging: process.env.NODE_ENV === 'development',  // Only dev loggin
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,  // Use SSL in production
     entities: [__dirname + '/../entities/*.{ts,js}'],
     migrations: [__dirname + '/../migrations/*.{ts,js}'],
 });
