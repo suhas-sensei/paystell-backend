@@ -14,12 +14,12 @@ class SessionService {
   }
 
   async createSession(userId: string): Promise<Session> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const user = await this.userRepository.findOne({ where: { id: Number(userId) } });
     if (!user) throw new Error("User not found");
 
     // Check for an existing session and delete it
     const existingSession = await this.sessionRepository.findOne({
-      where: { user: { id: userId } },
+      where: { user: { id: Number(userId) } },
     });
     if (existingSession) {
       await this.sessionRepository.delete({ id: existingSession.id });
