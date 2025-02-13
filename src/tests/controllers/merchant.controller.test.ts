@@ -5,7 +5,7 @@ import { validateWebhookUrl } from '../../validators/webhook.validators';
 import { MerchantAuthService } from '../../services/merchant.service';
 import { WebhookService } from '../../services/webhook.service';
 import crypto from 'crypto';
-import { asyncHandler } from '../../middleware/auth';
+import { asyncHandler } from '../../middlewares/middleware/auth';
 
 jest.mock('../../services/merchant.service');
 jest.mock('../../services/webhook.service');
