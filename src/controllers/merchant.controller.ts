@@ -47,7 +47,10 @@ export class MerchantController {
       const { url } = req.body;
       const merchantId = req.merchant.id
       const merchant = await merchantAuthService.getMerchantById(merchantId);
-      // const secret = merchant?.secret
+
+      if (merchant) {
+        throw new Error(`Merchant already exists`)
+      }
       // the middleware helped join it to our request headers
 
       if (!validateWebhookUrl(url)) {
@@ -67,11 +70,15 @@ export class MerchantController {
       }
       // implement logic to save to database here
 
+      const registeredWebhook = await webhookService.register(webhook)
+
+
+
       return res.status(201).json({
         message: 'Webhook registered successfully',
         webhook: {
-          id: webhook.id,
-          url: webhook.url,
+          id: registeredWebhook.id,
+          url: registeredWebhook.url,
           // secret: webhook.secret
         }
       });
@@ -107,13 +114,15 @@ export class MerchantController {
         createdAt: existingWebhook.createdAt,
         updatedAt: new Date()
       }
+
       // implement logic to save to database here
+      const updatedWebhook = await webhookService.update(updatedWebhookObject)
 
       return res.status(200).json({
         message: 'Webhook registered successfully',
         webhook: {
-          id: updatedWebhookObject.id,
-          url: updatedWebhookObject.url,
+          id: updatedWebhook.id,
+          url: updatedWebhook.url,
           // secret: webhook.secret
         }
       });

@@ -11,21 +11,30 @@ export class WebhookController {
     async handleWebhook(
         req: Request, res: Response
     ) {
-        const response = res
+        // const response = res
         try {
             const { payload }: StellarWebhookPayload = req.body
 
-            const merchant: Merchant | null = await merchantAuthService.getMerchantById(payload.customer.id)
-            if (!merchant) {
-                return res.status(404).json({ error: "Merchant not found" })
+            const merchant = await merchantAuthService.getMerchantById(payload.customer.id)
+
+            if (!merchant || !merchant.isActive) {
+                return res.status(404).json({
+                    status: 'error',
+                    code: 'MERCHANT_NOT_FOUND',
+                    message: merchant ? "Merchant not active" : "Merchant not found"
+                })
             }
-            if (!merchant.isActive) {
-                return res.status(404).json({ error: "Merchant not active" })
-            }
-            const merchantWebhook: MerchantWebhook | null = await webhookService.getMerchantWebhook(merchant.id)
+            
+            const merchantWebhook = await webhookService.getMerchantWebhook(merchant.id)
+
             if (!merchantWebhook) {
-                return res.status(404).json({ error: "Webhook not found" })
+                return res.status(404).json({
+                    status: 'error',
+                    code: 'WEBHOOK_NOT_FOUND',
+                    message: "Webhook not found" 
+                })
             }
+
             const webhookPayload: WebhookPayload = {
                 transactionId: payload.transaction.id,
                 transactionType: payload.transaction.type,
@@ -35,13 +44,23 @@ export class WebhookController {
                 merchantId: payload.customer.id,
                 timestamp: (new Date()).toISOString(),
                 eventType: `${payload.transaction.type}.${payload.transaction.status}`,
+                reqMethod: 'POST'
             }
-            // webhookService.notifyPaymentUpdate(merchantWebhook, webhookPayload)
+            
+
             await webhookService.notifyWithRetry(merchantWebhook, webhookPayload)
-            return res.status(200).json({ message: "Webhook processed successfully" })
+
+            return res.status(200).json({
+                status: 'success',
+                message: "Webhook processed successfully" 
+            });
         } catch (err) {
             console.error("Webhook error: ", err);
-            return res.status(500).json({ error: "Webhook error" })
+            return res.status(500).json({
+                status: 'error',
+                code: 'INTERNAL_ERROR', 
+                message: "Internal server error" 
+            })
         }
     }
 }

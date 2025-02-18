@@ -8,9 +8,11 @@ export type WebhookPayload = {
     asset: string | undefined, // This should be the coin, whether USDC or XLM etc
     merchantId: string,
     timestamp: string,
+    nonce?: string,
     paymentMethod?: string,
     metadata?: Record<string, any>
     eventType: string// 'payment.success' | 'payment.failure' | 'payment.pending'
+    reqMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 }
 
 export type MerchantWebhook = {

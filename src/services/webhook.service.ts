@@ -16,10 +16,73 @@ export class WebhookService {
         this.merchantWebhookrepository = AppDataSource.getRepository(MerchantWebhookEntity)
     }
 
+    private async generateNonce (): Promise<string> {
+        return crypto.randomBytes(16).toString('hex');
+    }
+
     private async generateSignature(payload: WebhookPayload, secret: string): Promise<string> {
+        const nonce = await this.generateNonce()
+        const { timestamp } = payload
+        const timestampMs = Date.parse(timestamp);
+        const now = Date.now()
+
+        if (Math.abs(now - timestampMs) > 5 * 60 * 1000) {
+            throw new Error('Timestamp validation failed. Request too old or future dated')
+        }
+
         const hmac = crypto.createHmac('sha256', secret);
-        hmac.update(JSON.stringify(payload))
-        return hmac.digest('hex')
+        payload.nonce = nonce
+
+        const dataToSign = {
+            ...payload, nonce, timestamp
+        }
+
+        hmac.update(JSON.stringify(dataToSign))
+        const signature = hmac.digest('hex')
+
+        if (payload.reqMethod === 'GET' || payload.reqMethod.startsWith('GET_')) {
+            const url = new URL(payload.metadata?.url);
+            url.searchParams.append('signature', signature)
+            return url.toString()
+        }
+
+        return signature
+    }
+
+    async register (webhookdata: MerchantWebhook): Promise<MerchantWebhook> {
+        const webhookExists = await this.merchantWebhookrepository.findOne({
+            where: {
+                id: webhookdata.id,
+                merchantId: webhookdata.merchantId
+            }
+        })
+        if (webhookExists) {
+            throw new Error('Webhook already exists')
+        }
+
+        const webhook = this.merchantWebhookrepository.create(webhookdata)
+        const savedWebhook = this.merchantWebhookrepository.save(webhook)
+
+        return savedWebhook
+    }
+
+    async update (webhookData: MerchantWebhook): Promise<MerchantWebhook> {
+        const existingWebhook = await this.merchantWebhookrepository.findOne({
+            where: {
+                id: webhookData.id,
+                merchantId: webhookData.merchantId
+            }
+        })
+
+        if (!existingWebhook) {
+            throw new Error('Webhook does not exist. Register Webhook')
+        }
+
+        const updatedWebhook = this.merchantWebhookrepository.merge(existingWebhook, webhookData)
+
+        const savedUpdatedWebhook = this.merchantWebhookrepository.save(updatedWebhook)
+
+        return savedUpdatedWebhook
     }
 
     private async sendWebhookNotification(

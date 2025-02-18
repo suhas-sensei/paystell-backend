@@ -10,12 +10,26 @@ export class MerchantAuthService {
         this.merchantRepository = AppDataSource.getRepository(MerchantEntity)
     }
 
+    async register (merchantData: Merchant): Promise<Merchant> {
+        const merchantExists = await this.merchantRepository.findOne({
+            where: { email: merchantData.email }
+        })
+
+        if (merchantExists) {
+            throw new Error("Email already registered")
+        }
+
+        const merchant = this.merchantRepository.create(merchantData)
+
+        const savedMerchant = this.merchantRepository.save(merchant)
+
+        return savedMerchant
+    }
+
     private async findMerchantByApiKey(apiKey: string): Promise<Merchant | null> {
         try {
             const merchant = await this.merchantRepository.findOne({
-                where: {
-                    apiKey
-                }
+                where: { apiKey }
             })
 
             if (!merchant) {
@@ -31,29 +45,30 @@ export class MerchantAuthService {
 
     async getMerchantById(id: string): Promise<Merchant | null> {
         try {
-            const merchant = this.merchantRepository.findOne({
-                where: {
-                    id
-                }
+            const merchant = await this.merchantRepository.findOne({
+                where: { id }
             })
-            if (!merchant) {
-                throw new Error('Merchant not found')
+
+            if (!merchant || !merchant.isActive) {
+                throw new Error(`Merchant ${merchant ? 'is not active' : 'not found'}`)
             }
+
             return merchant
         } catch (err) {
-            console.error("Error in finding merchant: ", err)
-            return null
+            throw new Error(`Error in finding merchant: ${err}`)
         }
 
     }
 
     async validateApiKey(apiKey: string): Promise<Merchant | null> {
-        if (!apiKey) return null;
+        if (!apiKey) {
+            throw new Error('API key is required')
+        };
 
-        const merchant: Merchant | null = await this.findMerchantByApiKey(apiKey);
+        const merchant = await this.findMerchantByApiKey(apiKey);
 
         if (!merchant || !merchant.isActive) {
-            throw new Error("Merchant does not exist or is not active")
+            throw new Error(`Merchant ${merchant ? 'is not active' : 'does not exist'}`)
         }
 
         return merchant;

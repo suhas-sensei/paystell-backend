@@ -5,7 +5,7 @@ import { validateWebhookUrl } from '../../validators/webhook.validators';
 import { MerchantAuthService } from '../../services/merchant.service';
 import { WebhookService } from '../../services/webhook.service';
 import crypto from 'crypto';
-import { asyncHandler } from '../../middlewares/middleware/auth';
+import { asyncHandler } from 'src/middlewares/merchantAuth';
 
 jest.mock('../../services/merchant.service');
 jest.mock('../../services/webhook.service');
@@ -34,9 +34,9 @@ describe('MerchantController', () => {
         merchantController = new MerchantController();
         merchantAuthService = new MerchantAuthService();
         webhookService = new WebhookService();
-        app.post('/register-merchant', asyncHandler((req, res) => merchantController.registerMerchant(req, res)));
-        app.post('/register-webhook', asyncHandler((req, res) => merchantController.registerWebhook(req, res)));
-        app.put('/update-webhook', asyncHandler((req, res) => merchantController.updateWebhook(req, res)));
+        app.post('/register-merchant', asyncHandler((req: any, res: any) => merchantController.registerMerchant(req, res)));
+        app.post('/register-webhook', asyncHandler((req: any, res: any) => merchantController.registerWebhook(req, res)));
+        app.put('/update-webhook', asyncHandler((req: any, res: any) => merchantController.updateWebhook(req, res)));
     });
 
     describe('registerMerchant', () => {
