@@ -10,6 +10,8 @@ import authRoutes from './routes/authRoutes';
 import RateLimitMonitoringService from "./services/rateLimitMonitoring.service";
 import { validateIpAddress } from "./middlewares/ipValidation.middleware";
 import { errorHandler } from "./middlewares/errorHandler";
+import merchantWebhookQueueRoutes from "./routes/merchantWebhookQueue.routes";
+import merchantWebhookRoutes from "./routes/webhook.routes";
 
 const app = express();
 
@@ -28,5 +30,7 @@ app.use("/email-verification", emailVerification);
 app.use("/paymentlink", PaymentRoute);
 app.use('/auth', authRoutes);
 app.use(errorHandler);
+app.use("/webhook-queue/merchant", merchantWebhookQueueRoutes);
+app.use("/webhook", merchantWebhookRoutes);
 
 export default app;
