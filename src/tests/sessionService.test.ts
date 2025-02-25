@@ -13,7 +13,7 @@ describe("SessionService", () => {
     // Create a test user
     const userRepository = AppDataSource.getRepository(User);
     user = userRepository.create({
-      id: "095374d4-aea5-41e6-b57c-a00689495477",
+      id: 1,
       firstName: "Test",
       lastName: "Test",
       email: "test@example.com",
