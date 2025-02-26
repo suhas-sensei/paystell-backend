@@ -10,9 +10,12 @@ import authRoutes from './routes/authRoutes';
 import RateLimitMonitoringService from "./services/rateLimitMonitoring.service";
 import { validateIpAddress } from "./middlewares/ipValidation.middleware";
 import { errorHandler } from "./middlewares/errorHandler";
+import healthRouter from "./routes/health.routes";
 
+// Initialize express app
 const app = express();
 
+// Apply middleware
 app.use(morgan("dev"));
 app.use(cors());
 app.use(express.json());
@@ -28,5 +31,8 @@ app.use("/email-verification", emailVerification);
 app.use("/paymentlink", PaymentRoute);
 app.use('/auth', authRoutes);
 app.use(errorHandler);
+app.use('/health', healthRouter);
 
+
+// Export app
 export default app;
