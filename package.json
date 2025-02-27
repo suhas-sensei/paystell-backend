@@ -28,7 +28,7 @@
     "nodemailer": "^6.10.0",
     "pg": "^8.13.1",
     "rate-limit-redis": "^4.2.0",
-    "redis": "^4.6.13",
+    "redis": "^4.7.0",
     "reflect-metadata": "^0.2.2",
     "speakeasy": "^2.0.0",
     "typeorm": "^0.3.20",
