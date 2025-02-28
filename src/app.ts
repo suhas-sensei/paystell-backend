@@ -8,13 +8,19 @@ import emailVerification from "./routes/emailVerification.routes";
 import PaymentRoute from './routes/ParymentLink.routes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes'; 
+import RateLimitMonitoringService from "./services/rateLimitMonitoring.service";
+import { validateIpAddress } from "./middlewares/ipValidation.middleware";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
 
 app.use(morgan("dev"));
 app.use(cors());
 app.use(express.json());
+app.use(validateIpAddress);
+app.use(RateLimitMonitoringService.createRateLimitMonitoringMiddleware());
 app.use(globalRateLimiter);
+
 startExpiredSessionCleanupCronJobs();
 
 app.use("/session", sessionRouter);
@@ -22,5 +28,7 @@ app.use("/email-verification", emailVerification);
 app.use("/paymentlink", PaymentRoute);
 app.use('/auth', authRoutes);
 app.use("/users", userRoutes);  
+app.use(errorHandler);
+
 
 export default app;
