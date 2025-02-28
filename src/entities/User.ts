@@ -13,11 +13,7 @@ export class User {
 
     @Column()
     @IsNotEmpty()
-    firstName!: string;
-
-    @Column()
-    @IsNotEmpty()
-    lastName!: string;
+    name!: string;
 
     @Column({ unique: true })
     @IsEmail()
