@@ -77,7 +77,7 @@ export class AuthService {
     
         return {
             id: savedUser.id,
-            name: savedUser.firstName,
+            name: savedUser.name,
             email: savedUser.email,
             createdAt: savedUser.createdAt,
             updatedAt: savedUser.updatedAt
@@ -107,7 +107,7 @@ export class AuthService {
         return {
             user: {
                 id: user.id,
-                name: user.firstName,
+                name: user.name,
                 email: user.email,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
@@ -144,7 +144,7 @@ export class AuthService {
 
         return {
             id: user.id,
-            name: user.firstName,
+            name: user.name,
             email: user.email,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
