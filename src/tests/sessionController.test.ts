@@ -16,7 +16,7 @@ describe("SessionController", () => {
 
     const userRepository = AppDataSource.getRepository(User);
     user = userRepository.create({
-      id: "095374d4-aea5-41e6-b57c-a00689495477",
+      id: 1,
       email: "test@example.com",
       firstName: "Test",
       lastName: "Test",
