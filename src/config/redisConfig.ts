@@ -2,7 +2,7 @@ import { createClient } from 'redis';
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-// Singleton Redis client (para reutilización global)
+// Main Redis client (singleton)
 const redisClient = createClient({ url: redisUrl });
 
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
@@ -12,21 +12,22 @@ redisClient.on('error', (err) => console.error('Redis Client Error:', err));
     await redisClient.connect();
     console.log('🚀 Connected to Redis');
   } catch (err) {
-    console.error('❌ Redis connection error:', err);
+    console.error('❌ Failed to connect to Redis:', err);
   }
 })();
 
 /**
  * Creates a new Redis client instance without automatically connecting.
- * Use this if you need separate Redis connections.
+ * This is useful when multiple separate Redis connections are needed.
  */
 export const createRedisClient = () => {
   const client = createClient({ url: redisUrl });
 
   client.on('error', (err) => console.error('Redis client error:', err));
+  client.on('connect', () => console.log('Connected to Redis'));
 
-  return client; // El usuario debe llamar `client.connect()` manualmente
+  return client; // The user must call `client.connect()` manually
 };
 
-// Export both the singleton and the factory function
-export default redisClient;
+// Export both the singleton client and the factory function
+export { redisClient };
