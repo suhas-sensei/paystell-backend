@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { UserService } from '../services/UserService';
 import { CreateUserDTO } from '../dtos/CreateUserDTO';
 import { UpdateUserDTO } from '../dtos/UpdateUserDTO';
-import redisClient from '../config/redisConfig';
+import { redisClient } from '../config/redisConfig';
 import { cacheMiddleware } from '../middlewares/cacheMiddleware';
 
 export class UserController {

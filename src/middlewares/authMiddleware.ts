@@ -1,18 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verify, TokenExpiredError, JsonWebTokenError, JwtPayload } from "jsonwebtoken";
 
-declare global {
-    namespace Express {
-        interface Request {
-            user?: { 
-                id: number; 
-                email: string;
-                tokenExp?: number;
-            };
-        }
-    }
-}
-
 export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
 
@@ -42,7 +30,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
         req.user = {
             id: decoded.id,
             email: decoded.email,
-            tokenExp: decoded.exp
+            tokenExp: decoded.exp,
         };
 
         // Token expiration warning (5 minutes before expiration)
