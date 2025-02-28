@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, Length, IsEnum } from "class-validator";
+import { IsEmail, IsNotEmpty, IsEnum, MinLength } from "class-validator";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, OneToOne, OneToMany } from "typeorm";
 import { UserRole } from "../enums/UserRole";
 import { Session } from "./Session";
@@ -13,14 +13,18 @@ export class User {
 
     @Column()
     @IsNotEmpty()
-    name!: string;
+    firstName!: string;
+
+    @Column()
+    @IsNotEmpty()
+    lastName!: string;
 
     @Column({ unique: true })
     @IsEmail()
     email!: string;
 
     @Column()
-    @Length(70) // could vary save a hash
+    @MinLength(8) // minimum length for password
     password!: string;
 
     @Column({ 
