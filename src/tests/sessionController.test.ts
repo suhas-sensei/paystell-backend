@@ -18,8 +18,8 @@ describe("SessionController", () => {
     user = userRepository.create({
       id: 1,
       email: "test@example.com",
-      firstName: "Test",
-      lastName: "Test",
+      name: "Test",
+      // lastName: "Test",
       password: "hashedpassword",
     });
     await userRepository.save(user);
