@@ -47,12 +47,15 @@ router.get("/dependencies", async (_req, res) => {
   };
   
   try {
-    // TODO: Implement Stellar health check here
-    // Add code to check Stellar connectivity
+    const stellarResponse = await fetch("https://horizon-testnet.stellar.org/");
     
+    if (!stellarResponse.ok) {
+      throw new Error(`Stellar API returned ${stellarResponse.status}`);
+    }
     res.status(200).json(healthcheck);
   } catch (error) {
     healthcheck.message = error instanceof Error ? error.message : "Dependencies check failed";
+    healthcheck.dependencies.stellar = "FAIL";
     res.status(503).json(healthcheck);
   }
 });
