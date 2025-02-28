@@ -72,7 +72,7 @@ describe("Health Check Endpoints", () => {
       expect(response.status).toBe(200);
       expect(response.body.message).toBe("OK");
       expect(response.body.dependencies).toHaveProperty("stellar", "OK");
-      expect(global.fetch).toHaveBeenCalledWith("https://horizon.stellar.org/");
+      expect(global.fetch).toHaveBeenCalledWith("https://horizon-testnet.stellar.org/");
     });
 
     it("should return 503 if Stellar API is not accessible", async () => {
