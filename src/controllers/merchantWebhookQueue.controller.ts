@@ -1,23 +1,45 @@
 import { Request, Response } from "express";
 import { MerchantWebhookQueueService } from "../services/MerchantWebhookQueue.service";
 
+/**
+ * Singleton instance of the queue service for webhook management
+ */
 const merchantWebhookQueueService = new MerchantWebhookQueueService();
 
-
+/**
+ * Controller for managing webhook queue operations and admin interfaces
+ * Provides endpoints for viewing webhook statuses and metrics
+ */
 export class MerchantWebhookQueueController {
+  /**
+   * Retrieves failed webhook events with pagination
+   * Allows filtering by merchantId
+   */
   async getFailedWebhooks(req: Request, res: Response): Promise<any> {
     try {
-      const { merchantId, limit, offset } = req.query;
+      // Extract query parameters with type safety
+      const merchantId = typeof req.query.merchantId === 'string' 
+        ? req.query.merchantId 
+        : undefined;
+      
+      // Set limit with upper bound to prevent excessive queries
+      const limitNum = Math.min(
+        parseInt(req.query.limit as string) || 10, 
+        100
+      );
+      
+      // Ensure offset is never negative
+      const offsetNum = Math.max(
+        parseInt(req.query.offset as string) || 0,
+        0
+      );
 
-      const limitNum = limit ? parseInt(limit as string) : 10;
-      const offsetNum = offset ? parseInt(offset as string) : 0;
-
-      const failedWebhooks =
-        await merchantWebhookQueueService.getFailedWebhookEvents(
-          merchantId as string,
-          limitNum,
-          offsetNum
-        );
+      // Fetch failed webhook events from database
+      const failedWebhooks = await merchantWebhookQueueService.getFailedWebhookEvents(
+        merchantId,
+        limitNum,
+        offsetNum
+      );
 
       return res.json({
         status: "success",
@@ -33,19 +55,35 @@ export class MerchantWebhookQueueController {
     }
   }
 
+  /**
+   * Retrieves pending webhook events with pagination
+   * Shows webhooks that are scheduled for retry
+   */
   async getPendingWebhooks(req: Request, res: Response): Promise<any> {
     try {
-      const { merchantId, limit, offset } = req.query;
+      // Extract query parameters with type safety
+      const merchantId = typeof req.query.merchantId === 'string' 
+        ? req.query.merchantId 
+        : undefined;
+      
+      // Set limit with upper bound to prevent excessive queries
+      const limitNum = Math.min(
+        parseInt(req.query.limit as string) || 10, 
+        100
+      );
+      
+      // Ensure offset is never negative
+      const offsetNum = Math.max(
+        parseInt(req.query.offset as string) || 0,
+        0
+      );
 
-      const limitNum = limit ? parseInt(limit as string) : 10;
-      const offsetNum = offset ? parseInt(offset as string) : 0;
-
-      const pendingWebhooks =
-        await merchantWebhookQueueService.getPendingWebhookEvents(
-          merchantId as string,
-          limitNum,
-          offsetNum
-        );
+      // Fetch pending webhook events from database
+      const pendingWebhooks = await merchantWebhookQueueService.getPendingWebhookEvents(
+        merchantId,
+        limitNum,
+        offsetNum
+      );
 
       return res.json({
         status: "success",
@@ -61,10 +99,16 @@ export class MerchantWebhookQueueController {
     }
   }
 
+  /**
+   * Manually triggers a retry for a failed webhook
+   * Resets the retry counter and updates status
+   */
   async retryWebhook(req: Request, res: Response): Promise<any> {
     try {
+      // Get job ID from URL parameter
       const { jobId } = req.params;
 
+      // Validate job ID is provided
       if (!jobId) {
         return res.status(400).json({
           status: "error",
@@ -72,6 +116,7 @@ export class MerchantWebhookQueueController {
         });
       }
 
+      // Queue webhook for retry
       await merchantWebhookQueueService.retryWebhook(jobId);
 
       return res.json({
@@ -88,12 +133,20 @@ export class MerchantWebhookQueueController {
     }
   }
 
+  /**
+   * Retrieves webhook queue metrics
+   * Shows active, completed, failed, and pending webhooks
+   * Includes success rate calculations
+   */
   async getQueueMetrics(req: Request, res: Response): Promise<any> {
     try {
-      const { merchantId } = req.query;
-      const metrics = await merchantWebhookQueueService.getQueueMetrics(
-        merchantId as string
-      );
+      // Extract merchantId for filtering metrics
+      const merchantId = typeof req.query.merchantId === 'string' 
+        ? req.query.merchantId 
+        : undefined;
+      
+      // Fetch queue metrics including success rates
+      const metrics = await merchantWebhookQueueService.getQueueMetrics(merchantId);
 
       return res.json({
         status: "success",

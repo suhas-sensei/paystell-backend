@@ -1,47 +1,61 @@
 import { WebhookNotificationService } from "../services/webhookNotification.service";
-import { StellarWebhookPayload, WebhookPayload } from "../interfaces/webhook.interfaces";
+import {
+  StellarWebhookPayload,
+  WebhookPayload,
+} from "../interfaces/webhook.interfaces";
 import { MerchantAuthService } from "../services/merchant.service";
 import { WebhookService } from "../services/webhook.service";
-import { Request, Response } from 'express'
+import { Request, Response } from "express";
 import { CryptoGeneratorService } from "../services/cryptoGenerator.service";
 import { MerchantWebhookQueueService } from "../services/MerchantWebhookQueue.service";
 
 // TODO: this initialization needs to be moved to dependency injection
 const defaultWebhookService = new WebhookService();
-const defaultMerchantAuthService = new MerchantAuthService()
-const defaultCryptoGeneratorService = new CryptoGeneratorService()
-const defaultWebhookNotificationService = new WebhookNotificationService(defaultMerchantAuthService, defaultCryptoGeneratorService)
+const defaultMerchantAuthService = new MerchantAuthService();
+const defaultCryptoGeneratorService = new CryptoGeneratorService();
+const defaultWebhookNotificationService = new WebhookNotificationService(
+  defaultMerchantAuthService,
+  defaultCryptoGeneratorService
+);
 const merchantWebhookQueueService = new MerchantWebhookQueueService();
 
 export class WebhookController {
-    private webhookService: WebhookService;
-    private webhookNotificationService: WebhookNotificationService;
-    private merchantAuthService: MerchantAuthService;
+  private webhookService: WebhookService;
+  private webhookNotificationService: WebhookNotificationService;
+  private merchantAuthService: MerchantAuthService;
 
-    constructor(webhookService?: WebhookService, merchantAuthService?: MerchantAuthService, webhookNotificationService?: WebhookNotificationService) {
-        this.webhookService = webhookService ?? defaultWebhookService
-        this.merchantAuthService = merchantAuthService ?? defaultMerchantAuthService
-        this.webhookNotificationService = webhookNotificationService ?? defaultWebhookNotificationService
-    }
+  constructor(
+    webhookService?: WebhookService,
+    merchantAuthService?: MerchantAuthService,
+    webhookNotificationService?: WebhookNotificationService
+  ) {
+    this.webhookService = webhookService ?? defaultWebhookService;
+    this.merchantAuthService =
+      merchantAuthService ?? defaultMerchantAuthService;
+    this.webhookNotificationService =
+      webhookNotificationService ?? defaultWebhookNotificationService;
+  }
 
-    async handleWebhook(
-        req: Request, res: Response
-    ) {
-        // const response = res
-        try {
-            const { payload }: StellarWebhookPayload = req.body
+  async handleWebhook(req: Request, res: Response) {
+    // const response = res
+    try {
+      const { payload }: StellarWebhookPayload = req.body;
 
-            const merchant = await this.merchantAuthService.getMerchantById(payload.customer.id)
+      const merchant = await this.merchantAuthService.getMerchantById(
+        payload.customer.id
+      );
 
-            if (!merchant || !merchant.isActive) {
-                return res.status(404).json({
-                    status: 'error',
-                    code: 'MERCHANT_NOT_FOUND',
-                    message: merchant ? "Merchant not active" : "Merchant not found"
-                })
-            }
-            
-            const merchantWebhook = await this.webhookService.getMerchantWebhook(merchant.id)
+      if (!merchant || !merchant.isActive) {
+        return res.status(404).json({
+          status: "error",
+          code: "MERCHANT_NOT_FOUND",
+          message: merchant ? "Merchant not active" : "Merchant not found",
+        });
+      }
+
+      const merchantWebhook = await this.webhookService.getMerchantWebhook(
+        merchant.id
+      );
 
       if (!merchantWebhook) {
         return res.status(404).json({
@@ -63,7 +77,10 @@ export class WebhookController {
         reqMethod: "POST",
       };
 
-      await this.webhookService.notifyWithRetry(merchantWebhook, webhookPayload);
+      await merchantWebhookQueueService.addToQueue(
+        merchantWebhook,
+        webhookPayload
+      );
 
       return res.status(200).json({
         status: "success",

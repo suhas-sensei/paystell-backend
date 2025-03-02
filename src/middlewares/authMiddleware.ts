@@ -102,7 +102,7 @@ export const isUserAuthorized = (roles: UserRole | UserRole[]) => {
 
     // Get user role from req.user (you may need to adjust this depending on how your user object is structured)
     const userService = new UserService();
-    const user = await userService.getUserById(req.user.id);
+    const user = await userService.getUserById(req?.user?.id);
     if (!user) {
       res.status(401).json({
         status: "error",
@@ -112,13 +112,6 @@ export const isUserAuthorized = (roles: UserRole | UserRole[]) => {
       return;
     }
     const userRole = user.role;
-
-    req.user = {
-        id: decoded.id,
-        email: decoded.email,
-        tokenExp: decoded.exp,
-    };
-
 
     // Check if user has the required role
     const allowedRoles = Array.isArray(roles) ? roles : [roles];

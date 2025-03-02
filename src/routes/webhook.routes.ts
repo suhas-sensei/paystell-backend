@@ -1,40 +1,24 @@
 import express from "express";
-import { MerchantController } from "../controllers/merchant.controller";
-import {
-  authenticateMerchant,
-  authenticateStellarWebhook,
-  asyncHandler,
-} from "../middlewares/merchantAuth";
+import { MerchantController } from '../controllers/merchant.controller'
+import { authenticateMerchant, authenticateStellarWebhook, asyncHandler } from "../middlewares/merchantAuth";
 import { WebhookController } from "../controllers/webhook.controller";
-import { webhookRateLimiter } from "src/middlewares/webhookRateLimiter.middleware";
+import { webhookRateLimiter } from "../middlewares/webhookRateLimiter.middleware";
 
 const router = express.Router();
 const merchantController = new MerchantController();
-const webhookController = new WebhookController();
+const webhookController = new WebhookController()
 
 // router.use(webhookRateLimiter)
 
-router
-  .post(
-    "/webhooks/register",
-    authenticateMerchant,
-    asyncHandler(merchantController.registerWebhook)
-  )
-  .put(
-    "/webhooks/register/:id",
-    authenticateMerchant,
-    asyncHandler(merchantController.updateWebhook)
-  );
 router.post(
-  "/webhooks/stellar",
-  authenticateStellarWebhook,
-  asyncHandler(webhookController.handleWebhook)
-);
-
+    '/webhooks/register', authenticateMerchant, asyncHandler(merchantController.registerWebhook)
+)
+    .put(
+        '/webhooks/register/:id', authenticateMerchant, asyncHandler(merchantController.updateWebhook)
+    )
 router.post(
-  "/webhooks/test",
-  authenticateMerchant,
-  asyncHandler(webhookController.handleWebhook)
-);
+    '/webhooks/stellar', authenticateStellarWebhook, asyncHandler(webhookController.handleWebhook)
+)
 
-export default router;
+
+export default router

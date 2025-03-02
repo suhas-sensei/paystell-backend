@@ -52,7 +52,6 @@ app.use('/health', healthRouter);
 // Error handling middleware
 app.use(errorHandler);
 app.use("/webhook-queue/merchant", merchantWebhookQueueRoutes);
-app.use("/webhook", merchantWebhookRoutes);
 
 // Handle 404 errors
 app.use((req, res) => {
