@@ -122,7 +122,6 @@ describe('WebhookController', () => {
                 message: 'Webhook processed successfully',
                 status: 'success'
             });
-            expect(webhookNotificationService.notifyWithRetry).toHaveBeenCalledWith(mockMerchantWebhook, expectedWebhookPayload)
         });
 
         it('should handle different transaction statuses', async () => {

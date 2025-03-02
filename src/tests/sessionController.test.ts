@@ -19,7 +19,6 @@ describe("SessionController", () => {
       id: 1,
       email: "test@example.com",
       name: "Test",
-      // lastName: "Test",
       password: "hashedpassword",
     });
     await userRepository.save(user);

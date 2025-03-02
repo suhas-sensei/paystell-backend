@@ -16,6 +16,8 @@ import { startExpiredSessionCleanupCronJobs } from "./utils/schedular";
 
 // Initialize express app
 import { errorHandler } from "./middlewares/errorHandler";
+import merchantWebhookQueueRoutes from "./routes/merchantWebhookQueue.routes";
+import merchantWebhookRoutes from "./routes/webhook.routes";
 import { requestLogger } from "./middlewares/requestLogger.middleware";
 import logger from "./utils/logger";
 
@@ -49,6 +51,7 @@ app.use('/health', healthRouter);
 
 // Error handling middleware
 app.use(errorHandler);
+app.use("/webhook-queue/merchant", merchantWebhookQueueRoutes);
 
 // Handle 404 errors
 app.use((req, res) => {
