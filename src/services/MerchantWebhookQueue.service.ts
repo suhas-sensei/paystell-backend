@@ -228,9 +228,6 @@ export class MerchantWebhookQueueService {
   /**
    * Calculates the delay for next retry using exponential backoff
    * Delay increases with each attempt, capped at maximum value
-   *
-   * @param attemptsMade - Current attempt number (0-based)
-   * @returns Delay in milliseconds before next retry
    */
   private calculateNextRetryDelay(attemptsMade: number): number {
     const baseDelay = 5000; // 5 seconds
@@ -246,10 +243,6 @@ export class MerchantWebhookQueueService {
   /**
    * Adds a webhook notification to the retry queue
    * Creates a database record to track the webhook status
-   *
-   * @param merchantWebhook - The merchant's webhook configuration
-   * @param webhookPayload - The data to be sent to the webhook endpoint
-   * @returns The created job object
    */
   async addToQueue(
     merchantWebhook: MerchantWebhook,
@@ -291,11 +284,6 @@ export class MerchantWebhookQueueService {
 
   /**
    * Retrieves failed webhook events with pagination
-   *
-   * @param merchantId - Optional filter by merchant ID
-   * @param limit - Maximum number of records to retrieve
-   * @param offset - Number of records to skip for pagination
-   * @returns List of webhook events with FAILED status
    */
   async getFailedWebhookEvents(merchantId?: string, limit = 10, offset = 0) {
     // Build query for failed events
@@ -375,9 +363,6 @@ export class MerchantWebhookQueueService {
 
   /**
    * Retrieves webhook queue metrics and statistics
-   *
-   * @param merchantId - Optional filter for merchant-specific metrics
-   * @returns Object containing overall and merchant-specific metrics
    */
   async getQueueMetrics(merchantId?: string) {
     // Get queue-level statistics
