@@ -21,12 +21,8 @@ declare global {
   }
 }
 
-export const authMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
+export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
 
   if (!authHeader) {
     res.status(401).json({
@@ -116,6 +112,13 @@ export const isUserAuthorized = (roles: UserRole | UserRole[]) => {
       return;
     }
     const userRole = user.role;
+
+    req.user = {
+        id: decoded.id,
+        email: decoded.email,
+        tokenExp: decoded.exp,
+    };
+
 
     // Check if user has the required role
     const allowedRoles = Array.isArray(roles) ? roles : [roles];
