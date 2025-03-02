@@ -91,7 +91,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 export const isUserAuthorized = (roles: UserRole | UserRole[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Ensure user is authenticated first
-    if (!req.user) {
+    if (!req.user || !req.user.id) {
       res.status(401).json({
         status: "error",
         message: "Authentication required",

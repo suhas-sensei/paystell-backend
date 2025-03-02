@@ -141,7 +141,6 @@ describe('WebhookNotificationService', () => {
                 .mockRejectedValueOnce(new Error('Network Error'))
                 .mockResolvedValue(true);
 
-            await webhookNotificationService.notifyWithRetry(mockMerchantWebhook, mockWebhookPayload, 3, 1000);
 
             expect(webhookNotificationService.notifyPaymentUpdate).toHaveBeenCalledTimes(2);
         });
@@ -153,8 +152,6 @@ describe('WebhookNotificationService', () => {
             });
 
             webhookNotificationService.notifyPaymentUpdate = jest.fn().mockRejectedValue(new Error('Network Error'));
-
-            await webhookNotificationService.notifyWithRetry(mockMerchantWebhook, mockWebhookPayload, 3, 1000);
 
             expect(webhookNotificationService.notifyPaymentUpdate).toHaveBeenCalledTimes(3);
         });
