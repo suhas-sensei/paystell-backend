@@ -31,7 +31,7 @@ app.use(morgan("dev"));
 app.use(cors());
 app.use(express.json());
 app.use(validateIpAddress);
-// app.use(RateLimitMonitoringService.createRateLimitMonitoringMiddleware());
+app.use(RateLimitMonitoringService.createRateLimitMonitoringMiddleware());
 app.use(globalRateLimiter);
 app.use(requestLogger);
 
