@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+dist/
+build/
+
+# Test files
+coverage/
+test/
+**/*.test.ts
+**/*.spec.ts
+
+# Configuration files
+.eslintrc.js
+.prettierrc
+jest.config.js
+babel.config.js
+
+# Environment files
+.env
+.env.*
+
+# Other generated files
+*.js.map
+*.d.ts
+
+# Logs
+logs/
+*.log
+
+# IDE specific files
+.idea/
+.vscode/
