@@ -18,7 +18,7 @@ import { startExpiredSessionCleanupCronJobs } from "./utils/schedular";
 // Initialize express app
 import { errorHandler } from "./middlewares/errorHandler";
 import merchantWebhookQueueRoutes from "./routes/merchantWebhookQueue.routes";
-import merchantWebhookRoutes from "./routes/webhook.routes";
+import _merchantWebhookRoutes from "./routes/webhook.routes";
 import { requestLogger } from "./middlewares/requestLogger.middleware";
 import logger from "./utils/logger";
 
