@@ -12,11 +12,11 @@ export class User {
     @PrimaryGeneratedColumn()
     id!: number;
 
-    @Column()
+    @Column({ nullable: true })
     @IsNotEmpty()
     name!: string;
 
-    @Column({ unique: true })
+    @Column({ unique: true, nullable: true })
     @IsEmail()
     email!: string;
 
