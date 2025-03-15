@@ -8,16 +8,14 @@ import {
 import { UserRole } from "../enums/UserRole";
 import { UserService } from "../services/UserService";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: number;
-        email: string;
-        tokenExp?: number;
-        role?: UserRole;
-      };
-    }
+declare module 'express' {
+  interface Request {
+    user?: {
+      id: number;
+      email: string;
+      tokenExp?: number;
+      role?: UserRole;
+    };
   }
 }
 
