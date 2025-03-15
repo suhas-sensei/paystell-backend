@@ -1,11 +1,9 @@
 import request from 'supertest';
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import { MerchantController } from '../../controllers/merchant.controller';
 import { validateWebhookUrl } from '../../validators/webhook.validators';
 import { MerchantAuthService } from '../../services/merchant.service';
 import { WebhookService } from '../../services/webhook.service';
-import crypto from 'crypto';
-import { asyncHandler } from 'src/middlewares/merchantAuth';
 
 // Define merchant type
 interface Merchant {
@@ -19,7 +17,7 @@ interface MerchantRequest extends Omit<Request, 'merchant'> {
 }
 
 // Define type for async handler function
-type AsyncRequestHandler = (req: MerchantRequest, res: Response) => Promise<void>;
+type AsyncRequestHandler = (req: MerchantRequest, res: Response, next: NextFunction) => Promise<void>;
 
 jest.mock('../../services/merchant.service');
 jest.mock('../../services/webhook.service');
@@ -40,22 +38,39 @@ describe('MerchantController', () => {
         app = express();
         app.use(express.json());
 
-        app.use((req: MerchantRequest, res: Response, next: NextFunction) => {
+        app.use(((req: MerchantRequest, res: Response, next: NextFunction) => {
             req.merchant = { id: 'merchant-123' };
             next();
-        });
+        }) as RequestHandler);
 
         merchantController = new MerchantController();
         merchantAuthService = new MerchantAuthService() as jest.Mocked<MerchantAuthService>;
         webhookService = new WebhookService() as jest.Mocked<WebhookService>;
         
         // Cast the request type to MerchantRequest for the route handlers
-        app.post('/register-merchant', asyncHandler((req: MerchantRequest, res: Response) => 
-            merchantController.registerMerchant(req as Request, res)));
-        app.post('/register-webhook', asyncHandler((req: MerchantRequest, res: Response) => 
-            merchantController.registerWebhook(req as Request, res)));
-        app.put('/update-webhook', asyncHandler((req: MerchantRequest, res: Response) => 
-            merchantController.updateWebhook(req as Request, res)));
+        app.post('/register-merchant', (async (req, res, next) => {
+            try {
+                await merchantController.registerMerchant(req as Request, res);
+            } catch (error) {
+                next(error);
+            }
+        }) as RequestHandler);
+            
+        app.post('/register-webhook', (async (req, res, next) => {
+            try {
+                await merchantController.registerWebhook(req as Request, res);
+            } catch (error) {
+                next(error);
+            }
+        }) as RequestHandler);
+            
+        app.put('/update-webhook', (async (req, res, next) => {
+            try {
+                await merchantController.updateWebhook(req as Request, res);
+            } catch (error) {
+                next(error);
+            }
+        }) as RequestHandler);
     });
 
     describe('registerMerchant', () => {
