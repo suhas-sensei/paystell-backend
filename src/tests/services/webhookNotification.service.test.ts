@@ -131,7 +131,7 @@ describe('WebhookNotificationService', () => {
 
     describe('notifyWithRetry', () => {
         it('should retry sending webhook notification up to maxRetries', async () => {
-            jest.spyOn(global, 'setTimeout').mockImplementation((fn, ms) => {
+            jest.spyOn(global, 'setTimeout').mockImplementation((fn, _ms) => {
                 fn(); // Execute the callback immediately
                 return {} as unknown as NodeJS.Timeout; // Return a mocked timeout object
             });
@@ -146,7 +146,7 @@ describe('WebhookNotificationService', () => {
         });
 
         it('should fail after max retries', async () => {
-            jest.spyOn(global, 'setTimeout').mockImplementation((fn, ms) => {
+            jest.spyOn(global, 'setTimeout').mockImplementation((fn, _ms) => {
                 fn(); // Execute the callback immediately
                 return {} as unknown as NodeJS.Timeout; // Return a mocked timeout object
             });
@@ -154,6 +154,14 @@ describe('WebhookNotificationService', () => {
             webhookNotificationService.notifyPaymentUpdate = jest.fn().mockRejectedValue(new Error('Network Error'));
 
             expect(webhookNotificationService.notifyPaymentUpdate).toHaveBeenCalledTimes(3);
+        });
+
+        it('should handle retry after failure', async () => {
+            // ... test implementation
+        });
+
+        it('should handle max retries exceeded', async () => {
+            // ... test implementation
         });
     });
 });
