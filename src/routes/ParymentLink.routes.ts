@@ -1,13 +1,30 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import { PaymentLinkController } from '../controllers/PaymentLink.controller';
+import { UserRole } from '../enums/UserRole';
+
+interface CustomRequest extends Request {
+  user?: {
+    id: number;
+    email: string;
+    tokenExp?: number;
+    role?: UserRole;
+  };
+}
 
 const router = Router();
 const paymentLinkController = new PaymentLinkController();
 
-const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => 
-  (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
+type AsyncRouteHandler<T = void> = (
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+) => Promise<T>;
+
+const asyncHandler = <T>(fn: AsyncRouteHandler<T>): RequestHandler => {
+    return (req, res, next) => {
+        Promise.resolve(fn(req as CustomRequest, res, next)).catch(next);
+    };
+};
 
 router.post('/', asyncHandler(paymentLinkController.createPaymentLink.bind(paymentLinkController)));
 router.get('/:id', asyncHandler(paymentLinkController.getPaymentLinkById.bind(paymentLinkController)));
