@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { MerchantWebhookQueueService } from "../services/MerchantWebhookQueue.service";
+import { MerchantWebhookQueueService } from "../services/merchantWebhookQueue.service";
 
 /**
  * Singleton instance of the queue service for webhook management
