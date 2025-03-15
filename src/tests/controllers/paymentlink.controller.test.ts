@@ -22,7 +22,8 @@ describe('PaymentLinkController', () => {
         } as unknown as jest.Mocked<PaymentLinkService>;
         
         paymentLinkController = new PaymentLinkController();
-        (paymentLinkController as any).paymentLinkService = paymentLinkService;
+        // @ts-expect-error - Needed for dependency injection in tests
+        paymentLinkController.paymentLinkService = paymentLinkService;
         
         jsonMock = jest.fn();
         statusMock = jest.fn().mockReturnValue({ json: jsonMock, send: jest.fn() });
