@@ -7,7 +7,7 @@ import { MerchantAuthService } from "../services/merchant.service";
 import { WebhookService } from "../services/webhook.service";
 import { Request, Response } from "express";
 import { CryptoGeneratorService } from "../services/cryptoGenerator.service";
-import { MerchantWebhookQueueService } from "../services/MerchantWebhookQueue.service";
+import { MerchantWebhookQueueService } from "../services/merchantWebhookQueue.service";
 
 // TODO: this initialization needs to be moved to dependency injection
 const defaultWebhookService = new WebhookService();
