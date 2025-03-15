@@ -105,7 +105,7 @@ describe('WebhookController', () => {
                 mockResponse as Response
             );
 
-            const expectedWebhookPayload: WebhookPayload = {
+            const _expectedWebhookPayload: WebhookPayload = {
                 transactionId: mockStellarPayload.payload.transaction.id,
                 transactionType: mockStellarPayload.payload.transaction.type,
                 status: mockStellarPayload.payload.transaction.status,
