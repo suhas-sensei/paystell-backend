@@ -1,27 +1,39 @@
 // middleware/auth.ts
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { MerchantAuthService } from '../services/merchant.service';
 import { Merchant } from '../interfaces/webhook.interfaces';
+import { UserRole } from '../enums/UserRole';
+
+// Extender el tipo Request mediante una extensión de módulo
+interface CustomRequest extends Request {
+  user?: {
+    id: number;
+    email: string;
+    tokenExp?: number;
+    role?: UserRole;
+  };
+  merchant: Merchant;
+}
 
 const merchantAuthService = new MerchantAuthService();
 
 export const asyncHandler =
-  (fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+  (fn: (req: CustomRequest, res: Response, next: NextFunction) => Promise<void | Response>): RequestHandler =>
+  (req, res, next) => {
+    Promise.resolve(fn(req as CustomRequest, res, next)).catch(next);
   };
 
-// Add merchant to Request type
-declare global {
-    namespace Express {
-        interface Request {
-            merchant: Merchant; // or your Merchant interface
-        }
-    }
+// Extender los tipos de Express usando la sintaxis moderna
+// en lugar de namespace
+import 'express';
+declare module 'express' {
+  interface Request {
+    merchant?: Merchant;  // Haciendo merchant opcional
+  }
 }
 
 export const authenticateMerchant = asyncHandler(async (
-    req: Request, 
+    req: CustomRequest, 
     res: Response, 
     next: NextFunction
 ) => {
@@ -53,7 +65,7 @@ export const authenticateMerchant = asyncHandler(async (
 });
 
 export const authenticateStellarWebhook = asyncHandler(async (
-    req: Request,
+    req: CustomRequest,
     res: Response,
     next: NextFunction
   ) => {
