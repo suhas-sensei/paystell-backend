@@ -48,11 +48,12 @@ describe('UserService', () => {
       expect(result).toEqual({ id: 1, ...userData });
     });
     it('should throw error if a required parameter is missing', async () => {
+        // Datos deliberadamente inválidos para probar validación
         const userData = {
         //name: 'Test User',
           email: 'test@example.com',
           password: 'password123'
-        } as any;
+        } as unknown as CreateUserDTO;
   
         await expect(userService.createUser(userData)).rejects.toThrow('name should not be empty');
     });
