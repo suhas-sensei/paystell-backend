@@ -2,12 +2,10 @@ import axios from "axios";
 import {
   WebhookPayload,
   MerchantWebhook,
-  Merchant,
 } from "../interfaces/webhook.interfaces";
 import { validateWebhookUrl } from "../validators/webhook.validators";
 import { MerchantAuthService } from "./merchant.service";
 import { CryptoGeneratorService } from "./cryptoGenerator.service";
-import { MerchantWebhookQueueService } from "./merchantWebhookQueue.service";
 
 const defaultMerchantAuthService = new MerchantAuthService();
 const defaultCryptoGeneratorService = new CryptoGeneratorService();
