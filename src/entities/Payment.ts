@@ -1,27 +1,39 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
-import { PaymentLink } from "./PaymentLink"
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { PaymentLink } from "./PaymentLink";
 
 @Entity()
 export class Payment {
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
 
   @Column({ type: "varchar", length: 255, unique: true })
-  paymentId: string
+  paymentId: string;
 
   @ManyToOne(() => PaymentLink, { nullable: false, onDelete: "CASCADE" })
   @JoinColumn()
-  paymentLink: PaymentLink
+  paymentLink: PaymentLink;
 
   @Column({ type: "decimal", precision: 10, scale: 2, nullable: false })
-  amount: number
+  amount: number;
 
-  @Column({ type: "enum", enum: ["pending", "completed", "failed"], default: "pending" })
-  status: "pending" | "completed" | "failed"
+  @Column({
+    type: "enum",
+    enum: ["pending", "completed", "failed"],
+    default: "pending",
+  })
+  status: "pending" | "completed" | "failed";
 
   @CreateDateColumn()
-  createdAt: Date
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date
+  updatedAt: Date;
 }

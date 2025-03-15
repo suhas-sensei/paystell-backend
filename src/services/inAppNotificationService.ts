@@ -7,6 +7,10 @@ import {
   NotificationStatus,
 } from "../entities/InAppNotification.entity";
 
+export interface NotificationMetadata {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 export interface CreateNotificationParams {
   title: string;
   message: string;
@@ -14,7 +18,7 @@ export interface CreateNotificationParams {
   category: NotificationCategory;
   recipientId?: string;
   link?: string;
-  metadata?: any;
+  metadata?: NotificationMetadata;
   priority?: number;
   expiresAt?: Date;
 }
@@ -24,12 +28,12 @@ export class NotificationService {
 
   constructor() {
     this.notificationRepository = AppDataSource.getRepository(
-      InAppNotificationEntity
+      InAppNotificationEntity,
     );
   }
 
   async createNotification(
-    params: CreateNotificationParams
+    params: CreateNotificationParams,
   ): Promise<InAppNotificationEntity> {
     const notification = new InAppNotificationEntity();
     notification.title = params.title;
@@ -47,7 +51,7 @@ export class NotificationService {
       notification.link = params.link;
     }
 
-    notification.metadata = params.metadata;
+    notification.metadata = params.metadata ?? {};
     notification.priority = params.priority ?? 0;
     notification.status = NotificationStatus.UNREAD;
     notification.isRead = false;

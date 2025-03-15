@@ -1,8 +1,8 @@
-import { MerchantWebhook } from '../interfaces/webhook.interfaces'
+import { MerchantWebhook } from "../interfaces/webhook.interfaces";
 import { Repository } from "typeorm";
 import AppDataSource from "../config/db";
 import { MerchantWebhookEntity } from "./../entities/MerchantWebhook.entity";
-import { MerchantWebhookQueueService } from "./MerchantWebhookQueue.service";
+import { MerchantWebhookQueueService } from "./merchantWebhookQueue.service";
 
 export class WebhookService {
   private merchantWebhookrepository: Repository<MerchantWebhookEntity>;
@@ -10,7 +10,7 @@ export class WebhookService {
 
   constructor() {
     this.merchantWebhookrepository = AppDataSource.getRepository(
-      MerchantWebhookEntity
+      MerchantWebhookEntity,
     );
   }
 
@@ -21,17 +21,16 @@ export class WebhookService {
     return this.merchantWebhookQueueService;
   }
 
-
-    async register (webhookdata: MerchantWebhook): Promise<MerchantWebhook> {
-        const webhookExists = await this.merchantWebhookrepository.findOne({
-            where: {
-                id: webhookdata.id,
-                merchantId: webhookdata.merchantId
-            }
-        })
-        if (webhookExists) {
-            throw new Error('Webhook already exists')
-        }
+  async register(webhookdata: MerchantWebhook): Promise<MerchantWebhook> {
+    const webhookExists = await this.merchantWebhookrepository.findOne({
+      where: {
+        id: webhookdata.id,
+        merchantId: webhookdata.merchantId,
+      },
+    });
+    if (webhookExists) {
+      throw new Error("Webhook already exists");
+    }
 
     const webhook = this.merchantWebhookrepository.create(webhookdata);
     const savedWebhook = this.merchantWebhookrepository.save(webhook);
@@ -53,7 +52,7 @@ export class WebhookService {
 
     const updatedWebhook = this.merchantWebhookrepository.merge(
       existingWebhook,
-      webhookData
+      webhookData,
     );
 
     const savedUpdatedWebhook =
@@ -63,7 +62,7 @@ export class WebhookService {
   }
 
   async getMerchantWebhook(
-    merchantId: string
+    merchantId: string,
   ): Promise<MerchantWebhook | null> {
     try {
       const merchantWebhook = await this.merchantWebhookrepository.findOne({

@@ -1,18 +1,14 @@
-import { MerchantWebhookQueueService } from "../../services/MerchantWebhookQueue.service";
+import { MerchantWebhookQueueService } from "../../services/merchantWebhookQueue.service";
 import { WebhookService } from "../../services/webhook.service";
-import { NotificationService } from "../../services/inAppNotification.service";
+import { NotificationService } from "../../services/inAppNotificationService";
 import { MerchantWebhookEventEntityStatus } from "../../enums/MerchantWebhookEventStatus";
-import {
-  NotificationType,
-  NotificationCategory,
-} from "../../entities/InAppNotification.entity";
 import * as Bull from "bull";
 import { WebhookPayload } from "src/interfaces/webhook.interfaces";
 
 // Mocks
 jest.mock("bull");
 jest.mock("../../services/webhook.service");
-jest.mock("../../services/inAppNotification.service");
+jest.mock("../../services/inAppNotificationService");
 jest.mock("../../config/db", () => ({
   getRepository: jest.fn().mockReturnValue({
     update: jest.fn().mockResolvedValue({}),
@@ -34,10 +30,34 @@ jest.mock("../../config/db", () => ({
 
 describe("MerchantWebhookQueueService", () => {
   let service: MerchantWebhookQueueService;
-  let mockQueue: any;
-  let mockWebhookService: jest.Mocked<WebhookService>;
-  let mockNotificationService: jest.Mocked<NotificationService>;
-  let mockRepository: any;
+
+  // Definir tipos de mocks
+  interface MockQueue {
+    add: jest.Mock;
+    process: jest.Mock;
+    on: jest.Mock;
+    getJobs: jest.Mock;
+    getJob: jest.Mock;
+    getJobCounts: jest.Mock;
+    getActiveCount: jest.Mock;
+    getCompletedCount: jest.Mock;
+    getFailedCount: jest.Mock;
+    getDelayedCount: jest.Mock;
+    getWaitingCount: jest.Mock;
+  }
+
+  interface MockRepository {
+    save: jest.Mock;
+    find: jest.Mock;
+    findOne: jest.Mock;
+    update: jest.Mock;
+    createQueryBuilder: jest.Mock;
+  }
+
+  let mockQueue: MockQueue;
+  let _mockWebhookService: jest.Mocked<WebhookService>;
+  let _mockNotificationService: jest.Mocked<NotificationService>;
+  let mockRepository: MockRepository;
 
   const mockMerchantWebhook = {
     id: "webhook-123",
@@ -73,6 +93,14 @@ describe("MerchantWebhookQueueService", () => {
         id: "job-123",
         retry: jest.fn().mockResolvedValue({}),
       }),
+      getJobs: jest.fn().mockResolvedValue([]),
+      getJobCounts: jest.fn().mockResolvedValue({
+        active: 1,
+        completed: 5,
+        failed: 2,
+        delayed: 1,
+        waiting: 3,
+      }),
       getActiveCount: jest.fn().mockResolvedValue(1),
       getCompletedCount: jest.fn().mockResolvedValue(5),
       getFailedCount: jest.fn().mockResolvedValue(2),
@@ -83,9 +111,9 @@ describe("MerchantWebhookQueueService", () => {
 
     // Setup service
     service = new MerchantWebhookQueueService();
-    mockWebhookService =
+    _mockWebhookService =
       WebhookService as unknown as jest.Mocked<WebhookService>;
-    mockNotificationService =
+    _mockNotificationService =
       NotificationService as unknown as jest.Mocked<NotificationService>;
     mockRepository = require("../../config/db").getRepository();
   });
@@ -94,7 +122,7 @@ describe("MerchantWebhookQueueService", () => {
     it("should add a webhook to the queue and save event record", async () => {
       const result = await service.addToQueue(
         mockMerchantWebhook,
-        mockWebhookPayload as WebhookPayload
+        mockWebhookPayload as WebhookPayload,
       );
 
       expect(mockQueue.add).toHaveBeenCalledWith(
@@ -102,7 +130,7 @@ describe("MerchantWebhookQueueService", () => {
           merchantWebhook: mockMerchantWebhook,
           webhookPayload: mockWebhookPayload,
         },
-        { jobId: expect.any(String), attempts: 5 }
+        { jobId: expect.any(String), attempts: 5 },
       );
       expect(mockRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -110,7 +138,7 @@ describe("MerchantWebhookQueueService", () => {
           merchantId: "merchant-123",
           status: MerchantWebhookEventEntityStatus.PENDING,
           attemptsMade: 0,
-        })
+        }),
       );
       expect(result).toEqual({ id: "job-123" });
     });
@@ -125,7 +153,7 @@ describe("MerchantWebhookQueueService", () => {
       expect(mockQueue.on).toHaveBeenCalledWith("failed", expect.any(Function));
       expect(mockQueue.on).toHaveBeenCalledWith(
         "completed",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
   });
@@ -178,7 +206,7 @@ describe("MerchantWebhookQueueService", () => {
       expect(mockRepository.createQueryBuilder).toHaveBeenCalled();
       expect(mockRepository.createQueryBuilder().where).toHaveBeenCalledWith(
         "event.status = :status",
-        { status: MerchantWebhookEventEntityStatus.FAILED }
+        { status: MerchantWebhookEventEntityStatus.FAILED },
       );
     });
 
@@ -187,7 +215,7 @@ describe("MerchantWebhookQueueService", () => {
 
       expect(mockRepository.createQueryBuilder().andWhere).toHaveBeenCalledWith(
         "event.merchantId = :merchantId",
-        { merchantId: "merchant-123" }
+        { merchantId: "merchant-123" },
       );
     });
   });
@@ -199,7 +227,7 @@ describe("MerchantWebhookQueueService", () => {
       expect(mockRepository.createQueryBuilder).toHaveBeenCalled();
       expect(mockRepository.createQueryBuilder().where).toHaveBeenCalledWith(
         "event.status = :status",
-        { status: MerchantWebhookEventEntityStatus.PENDING }
+        { status: MerchantWebhookEventEntityStatus.PENDING },
       );
     });
   });
@@ -215,7 +243,7 @@ describe("MerchantWebhookQueueService", () => {
           status: MerchantWebhookEventEntityStatus.PENDING,
           error: undefined,
           nextRetry: expect.any(Date),
-        }
+        },
       );
     });
 
@@ -223,16 +251,18 @@ describe("MerchantWebhookQueueService", () => {
       mockQueue.getJob.mockResolvedValue(null);
 
       await expect(service.retryWebhook("non-existent-job")).rejects.toThrow(
-        "Webhook job not found"
+        "Webhook job not found",
       );
     });
   });
 
   describe("calculateNextRetryDelay", () => {
     it("should apply exponential backoff", () => {
-      // Using the private method via any type cast for testing
+      // Using the private method via type assertion for testing
       const calculateNextRetryDelay = (
-        service as any
+        service as unknown as {
+          calculateNextRetryDelay(attemptsMade: number): number;
+        }
       ).calculateNextRetryDelay.bind(service);
 
       // base delay - first attempt
@@ -241,7 +271,9 @@ describe("MerchantWebhookQueueService", () => {
 
     it("should cap delay at 1 hour", () => {
       const calculateNextRetryDelay = (
-        service as any
+        service as unknown as {
+          calculateNextRetryDelay(attemptsMade: number): number;
+        }
       ).calculateNextRetryDelay.bind(service);
 
       // Testing with a high attempt number that would exceed 1 hour

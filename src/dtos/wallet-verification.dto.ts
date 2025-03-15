@@ -1,20 +1,20 @@
-import { IsString, Length } from 'class-validator';
-import { IsStellarAddress } from '../validators/IsStellarAddress';
+import { IsString, Length } from "class-validator";
+import { IsStellarAddress } from "../validators/IsStellarAddress";
 
 export class InitiateWalletVerificationDto {
-    @IsString()
-    userId: string;
+  @IsString()
+  userId: string;
 
-    @IsString()
-    @IsStellarAddress()
-    walletAddress: string;
+  @IsString()
+  @IsStellarAddress()
+  walletAddress: string;
 }
 
 export class VerifyWalletDto {
-    @IsString()
-    token: string;
+  @IsString()
+  token: string;
 
-    @IsString()
-    @Length(6, 6)
-    code: string;
+  @IsString()
+  @Length(6, 6)
+  code: string;
 }

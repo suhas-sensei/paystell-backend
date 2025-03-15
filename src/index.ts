@@ -1,6 +1,6 @@
 import "reflect-metadata";
-import app from './app';
-import AppDataSource from './config/db';
+import app from "./app";
+import AppDataSource from "./config/db";
 
 async function main() {
   try {

@@ -18,7 +18,7 @@ class EmailVerificationService {
   async sendWalletVerificationEmail(
     email: string,
     walletAddress: string,
-    verificationCode: string
+    verificationCode: string,
   ): Promise<void> {
     await sendWalletVerificationEmail(email, verificationCode, walletAddress);
   }

@@ -1,6 +1,10 @@
-import { baseEmailLayout } from './layout';
+import { baseEmailLayout } from "./layout";
 
-export const walletVerificationEmailTemplate = (verificationCode: string, walletAddress: string, verifyUrl: string): string => {
+export const walletVerificationEmailTemplate = (
+  verificationCode: string,
+  walletAddress: string,
+  verifyUrl: string,
+): string => {
   const header = `<h2>Verify Your Stellar Wallet</h2>`;
   const content = `
     <p>You requested to link the following Stellar wallet to your PayStell account:</p>

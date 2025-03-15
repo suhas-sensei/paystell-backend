@@ -8,21 +8,23 @@ import {
 import { UserRole } from "../enums/UserRole";
 import { UserService } from "../services/UserService";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: number;
-        email: string;
-        tokenExp?: number;
-        role?: UserRole;
-      };
-    }
+declare module "express" {
+  interface Request {
+    user?: {
+      id: number;
+      email: string;
+      tokenExp?: number;
+      role?: UserRole;
+    };
   }
 }
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-    const authHeader = req.headers.authorization;
+export const authMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  const authHeader = req.headers.authorization;
 
   if (!authHeader) {
     res.status(401).json({
@@ -47,13 +49,13 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
   try {
     const decoded = verify(
       token,
-      process.env.JWT_SECRET || "your-secret-key"
+      process.env.JWT_SECRET || "your-secret-key",
     ) as JwtPayload;
 
     req.user = {
       id: decoded.id,
       email: decoded.email,
-      tokenExp: decoded.exp
+      tokenExp: decoded.exp,
     };
 
     // Token expiration warning (5 minutes before expiration)

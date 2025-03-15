@@ -2,12 +2,10 @@ import axios from "axios";
 import {
   WebhookPayload,
   MerchantWebhook,
-  Merchant,
 } from "../interfaces/webhook.interfaces";
 import { validateWebhookUrl } from "../validators/webhook.validators";
 import { MerchantAuthService } from "./merchant.service";
 import { CryptoGeneratorService } from "./cryptoGenerator.service";
-import { MerchantWebhookQueueService } from "./MerchantWebhookQueue.service";
 
 const defaultMerchantAuthService = new MerchantAuthService();
 const defaultCryptoGeneratorService = new CryptoGeneratorService();
@@ -18,28 +16,33 @@ export class WebhookNotificationService {
 
   constructor(
     merchantAuthService?: MerchantAuthService,
-    criptoGeneratorService?: CryptoGeneratorService
+    cryptoGeneratorService?: CryptoGeneratorService,
   ) {
     this.merchantAuthService =
       merchantAuthService ?? defaultMerchantAuthService;
     this.cryptoGeneratorService =
-      criptoGeneratorService ?? defaultCryptoGeneratorService;
+      cryptoGeneratorService ?? defaultCryptoGeneratorService;
   }
 
   async sendWebhookNotification(
     webhookUrl: string,
     payload: WebhookPayload,
-    id: string
+    id: string,
   ): Promise<boolean> {
     try {
-      const merchant: Merchant | null =
-        await this.merchantAuthService.getMerchantById(id);
-      // if (!merchant) return
+      const merchant = await this.merchantAuthService.getMerchantById(id);
+
+      if (!merchant || !merchant.secret) {
+        console.error("Invalid merchant or missing secret");
+        return false;
+      }
+
       const signature =
         await this.cryptoGeneratorService.generateSignatureForWebhookPayload(
           payload,
-          merchant?.secret!
+          merchant.secret,
         );
+
       await axios.post(webhookUrl, payload, {
         headers: {
           "Content-Type": "application/json",
@@ -57,11 +60,17 @@ export class WebhookNotificationService {
 
   async notifyPaymentUpdate(
     merchantWebhook: MerchantWebhook,
-    paymentDetails: Omit<WebhookPayload, "timestamp">
+    paymentDetails: Omit<WebhookPayload, "timestamp">,
   ): Promise<boolean> {
     const merchant = await this.merchantAuthService.getMerchantById(
-      merchantWebhook.merchantId
+      merchantWebhook.merchantId,
     );
+
+    if (!merchant) {
+      console.error("Merchant not found");
+      return false;
+    }
+
     if (!merchantWebhook.isActive || !validateWebhookUrl(merchantWebhook.url)) {
       return false;
     }
@@ -74,7 +83,7 @@ export class WebhookNotificationService {
     return this.sendWebhookNotification(
       merchantWebhook.url,
       webhookPayload,
-      merchant?.secret!
+      merchant.id,
     );
   }
 }

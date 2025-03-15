@@ -7,9 +7,9 @@ import {
 } from "typeorm";
 
 export enum NotificationType {
-    BROADCAST = "broadcast",
-    MERCHANT = "merchant",
-    ADMIN = "admin"
+  BROADCAST = "broadcast",
+  MERCHANT = "merchant",
+  ADMIN = "admin",
 }
 
 export enum NotificationCategory {
@@ -70,7 +70,7 @@ export class InAppNotificationEntity {
   link: string;
 
   @Column({ type: "json", nullable: true })
-  metadata: any;
+  metadata: Record<string, unknown>;
 
   @Column({ default: 0 })
   priority: number;

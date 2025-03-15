@@ -7,12 +7,21 @@ import {
 import { MerchantWebhookEventEntity } from "../entities/MerchantWebhookEvent.entity";
 import AppDataSource from "../config/db";
 import { MerchantWebhookEventEntityStatus } from "../enums/MerchantWebhookEventStatus";
-import { NotificationService } from "./inAppNotification.service";
+import { NotificationService } from "./inAppNotificationService";
 import {
   NotificationCategory,
   NotificationType,
 } from "../entities/InAppNotification.entity";
 import { WebhookNotificationService } from "./webhookNotification.service";
+
+interface QueueJobData {
+  merchantWebhook: MerchantWebhook;
+  webhookPayload: WebhookPayload;
+}
+
+interface QueueJobResult {
+  success: boolean;
+}
 
 // Initialize the notification service for alerts
 const notificationService = new NotificationService();
@@ -25,7 +34,7 @@ export class MerchantWebhookQueueService {
   private webhookQueue: Queue.Queue;
   private merchantWebhookEventRepository: Repository<MerchantWebhookEventEntity>;
   private webhookNotificationService: WebhookNotificationService;
-  private MERCHANT_WEBHOOK_QUEUE = "merchant-webhook-queue";
+  private readonly MERCHANT_WEBHOOK_QUEUE = "merchant-webhook-queue";
 
   constructor() {
     // Set up the Bull queue with Redis backing and exponential backoff
@@ -47,7 +56,7 @@ export class MerchantWebhookQueueService {
 
     // Initialize repository for database operations
     this.merchantWebhookEventRepository = AppDataSource.getRepository(
-      MerchantWebhookEventEntity
+      MerchantWebhookEventEntity,
     );
 
     // Create webhook notification service for sending webhooks
@@ -62,165 +71,166 @@ export class MerchantWebhookQueueService {
    * Configures the queue processor to handle webhook delivery attempts
    * Processes each job and handles success/failure scenarios
    */
-  private setupQueueProcessor() {
-    this.webhookQueue.process(async (job: any) => {
-      const { merchantWebhook, webhookPayload } = job.data;
-      const attemptsMade = job.attemptsMade;
+  private setupQueueProcessor(): void {
+    this.webhookQueue.process(
+      async (job: Queue.Job<QueueJobData>): Promise<QueueJobResult> => {
+        const { merchantWebhook, webhookPayload } = job.data;
+        const attemptsMade = job.attemptsMade;
 
-      try {
-        // Attempt to send the webhook notification
-        const result =
-          await this.webhookNotificationService.notifyPaymentUpdate(
-            merchantWebhook,
-            webhookPayload
+        try {
+          // Attempt to send the webhook notification
+          const result =
+            await this.webhookNotificationService.notifyPaymentUpdate(
+              merchantWebhook,
+              webhookPayload,
+            );
+
+          // If notification fails but doesn't throw an error
+          if (!result) {
+            throw new Error("Webhook notification failed");
+          }
+
+          // Update database record on successful delivery
+          await this.merchantWebhookEventRepository.update(
+            { jobId: job.id.toString() },
+            {
+              status: MerchantWebhookEventEntityStatus.COMPLETED,
+              attemptsMade,
+              completedAt: new Date(),
+              nextRetry: undefined,
+            },
           );
 
-        // If notification fails but doesn't throw an error
-        if (!result) {
-          throw new Error("Webhook notification failed");
+          console.log(
+            `Webhook delivered successfully to ${merchantWebhook.url} after ${attemptsMade} attempt(s)`,
+          );
+
+          return { success: true };
+        } catch (error) {
+          const nextRetryDelay = this.calculateNextRetryDelay(attemptsMade);
+          const nextRetryDate = new Date(Date.now() + nextRetryDelay);
+          const maxAttempts = job.opts.attempts ?? 5;
+          const isLastAttempt = attemptsMade >= maxAttempts;
+
+          await this.merchantWebhookEventRepository.update(
+            { jobId: job.id.toString() },
+            {
+              status: isLastAttempt
+                ? MerchantWebhookEventEntityStatus.FAILED
+                : MerchantWebhookEventEntityStatus.PENDING,
+              error: error instanceof Error ? error.message : "Unknown error",
+              attemptsMade,
+              nextRetry: isLastAttempt ? undefined : nextRetryDate,
+            },
+          );
+
+          console.error(
+            `Webhook delivery attempt ${attemptsMade} failed for ${merchantWebhook.url}:`,
+            error instanceof Error ? error.message : "Unknown error",
+          );
+
+          throw error;
         }
-
-        // Update database record on successful delivery
-        await this.merchantWebhookEventRepository.update(
-          { jobId: job.id.toString() },
-          {
-            status: MerchantWebhookEventEntityStatus.COMPLETED,
-            attemptsMade,
-            completedAt: new Date(),
-            nextRetry: undefined,
-          }
-        );
-
-        console.log(
-          `Webhook delivered successfully to ${merchantWebhook.url} after ${attemptsMade} attempt(s)`
-        );
-
-        return { success: true };
-      } catch (error: any) {
-        // Calculate delay for next retry using exponential backoff
-        const nextRetryDelay = this.calculateNextRetryDelay(attemptsMade);
-        const nextRetryDate = new Date(Date.now() + nextRetryDelay);
-
-        // Determine if this is the final retry attempt
-        const isLastAttempt = attemptsMade >= job.opts.attempts;
-
-        // Update database record with failure information
-        await this.merchantWebhookEventRepository.update(
-          { jobId: job.id.toString() },
-          {
-            status: isLastAttempt
-              ? MerchantWebhookEventEntityStatus.FAILED // Final failure
-              : MerchantWebhookEventEntityStatus.PENDING, // Will retry
-            error: error?.message || "Unknown error",
-            attemptsMade,
-            nextRetry: isLastAttempt ? undefined : nextRetryDate,
-          }
-        );
-
-        console.error(
-          `Webhook delivery attempt ${attemptsMade} failed for ${merchantWebhook.url}:`,
-          error.message
-        );
-
-        // Rethrow error to trigger Bull's retry mechanism
-        throw error;
-      }
-    });
+      },
+    );
   }
 
   /**
    * Sets up event handlers for the webhook queue
    * Handles failed jobs, creates notifications, and tracks metrics
    */
-  private setupQueueEvents() {
+  private setupQueueEvents(): void {
     // Listen for failed jobs after all retries
-    this.webhookQueue.on("failed", async (job, error) => {
-      const attemptsMade = job.attemptsMade;
-      const maxAttempts = job.opts.attempts || 5;
-      const { merchantWebhook, webhookPayload } = job.data;
+    this.webhookQueue.on(
+      "failed",
+      async (job: Queue.Job<QueueJobData>, error: Error) => {
+        const attemptsMade = job.attemptsMade;
+        const maxAttempts = job.opts.attempts || 5;
+        const { merchantWebhook, webhookPayload } = job.data;
 
-      // Calculate next retry time if not the final attempt
-      let nextRetryTimestamp = null;
-      if (attemptsMade < maxAttempts - 1) {
-        const nextRetryDelay = this.calculateNextRetryDelay(attemptsMade);
-        nextRetryTimestamp = new Date(Date.now() + nextRetryDelay);
-      }
-
-      // Log comprehensive details about the failure for debugging
-      console.error("Webhook delivery failure details:", {
-        merchantId: merchantWebhook.merchantId,
-        originalPayload: webhookPayload,
-        error: error.message,
-        attemptNumber: attemptsMade + 1, // Make human-readable (1-based)
-        maxAttempts: maxAttempts,
-        isFinalAttempt: attemptsMade >= maxAttempts - 1,
-        nextRetryTimestamp: nextRetryTimestamp,
-        webhookUrl: merchantWebhook.url,
-        jobId: job.id,
-      });
-
-      // If this was the final retry attempt that failed
-      if (attemptsMade >= maxAttempts) {
-        // Prepare alert data for notification and logging
-        const alertData = {
-          merchantId: merchantWebhook.merchantId,
-          webhookUrl: merchantWebhook.url,
-          transactionId: webhookPayload.transactionId,
-          error: error.message,
-          attemptNumber: attemptsMade + 1,
-          jobId: job.id,
-          timestamp: new Date().toISOString(),
-        };
-
-        // Log an alert about the final failure
-        console.error(
-          `ALERT: Webhook delivery failed after ${maxAttempts} attempts for job ${job.id}`,
-          alertData
-        );
-
-        // Create in-app notification for administrators
-        try {
-          await notificationService.createNotification({
-            title: "Webhook Delivery Failed",
-            message: `Webhook to ${merchantWebhook.url} for transaction ${webhookPayload.transactionId} failed after ${maxAttempts} attempts.`,
-            notificationType: NotificationType.ADMIN,
-            category: NotificationCategory.ERROR,
-            priority: 2, // Higher priority for failed webhooks
-            metadata: {
-              ...alertData,
-              merchantWebhookId: merchantWebhook.id,
-              asset: webhookPayload.asset,
-              amount: webhookPayload.amount,
-              eventType: webhookPayload.eventType,
-            },
-            link: `/admin/webhooks/failed/${job.id}`,
-          });
-
-          console.log("Created notification for failed webhook");
-        } catch (notificationError) {
-          console.error("Failed to create notification:", notificationError);
+        // Calculate next retry time if not the final attempt
+        let nextRetryTimestamp: Date | null = null;
+        if (attemptsMade < maxAttempts - 1) {
+          const nextRetryDelay = this.calculateNextRetryDelay(attemptsMade);
+          nextRetryTimestamp = new Date(Date.now() + nextRetryDelay);
         }
 
-        // Mark webhook as permanently failed in the database
-        await this.merchantWebhookEventRepository.update(
-          { jobId: job.id.toString() },
-          {
-            status: MerchantWebhookEventEntityStatus.FAILED,
-            attemptsMade: maxAttempts,
-            nextRetry: undefined,
-            completedAt: new Date(),
+        // Log comprehensive details about the failure for debugging
+        console.error("Webhook delivery failure details:", {
+          merchantId: merchantWebhook.merchantId,
+          originalPayload: webhookPayload,
+          error: error.message,
+          attemptNumber: attemptsMade + 1, // Make human-readable (1-based)
+          maxAttempts: maxAttempts,
+          isFinalAttempt: attemptsMade >= maxAttempts - 1,
+          nextRetryTimestamp: nextRetryTimestamp,
+          webhookUrl: merchantWebhook.url,
+          jobId: job.id,
+        });
+
+        // If this was the final retry attempt that failed
+        if (attemptsMade >= maxAttempts) {
+          // Prepare alert data for notification and logging
+          const alertData = {
+            merchantId: merchantWebhook.merchantId,
+            webhookUrl: merchantWebhook.url,
+            transactionId: webhookPayload.transactionId,
+            error: error.message,
+            attemptNumber: attemptsMade + 1,
+            jobId: job.id,
+            timestamp: new Date().toISOString(),
+          };
+
+          // Log an alert about the final failure
+          console.error(
+            `ALERT: Webhook delivery failed after ${maxAttempts} attempts for job ${job.id}`,
+            alertData,
+          );
+
+          // Create in-app notification for administrators
+          try {
+            await notificationService.createNotification({
+              title: "Webhook Delivery Failed",
+              message: `Webhook to ${merchantWebhook.url} for transaction ${webhookPayload.transactionId} failed after ${maxAttempts} attempts.`,
+              notificationType: NotificationType.ADMIN,
+              category: NotificationCategory.ERROR,
+              priority: 2, // Higher priority for failed webhooks
+              metadata: {
+                ...alertData,
+                merchantWebhookId: merchantWebhook.id,
+                asset: webhookPayload.asset,
+                amount: webhookPayload.amount,
+                eventType: webhookPayload.eventType,
+              },
+              link: `/admin/webhooks/failed/${job.id}`,
+            });
+
+            console.log("Created notification for failed webhook");
+          } catch (notificationError) {
+            console.error("Failed to create notification:", notificationError);
           }
-        );
-      }
-    });
+
+          // Mark webhook as permanently failed in the database
+          await this.merchantWebhookEventRepository.update(
+            { jobId: job.id.toString() },
+            {
+              status: MerchantWebhookEventEntityStatus.FAILED,
+              attemptsMade: maxAttempts,
+              nextRetry: undefined,
+              completedAt: new Date(),
+            },
+          );
+        }
+      },
+    );
 
     // Track completed jobs for metrics
-    this.webhookQueue.on("completed", async (job) => {
+    this.webhookQueue.on("completed", async (job: Queue.Job<QueueJobData>) => {
       const { merchantWebhook } = job.data;
       const attemptsMade = job.attemptsMade;
 
       console.log(
-        `Webhook to merchant ${merchantWebhook.merchantId} completed successfully after ${attemptsMade} attempt(s)`
+        `Webhook to merchant ${merchantWebhook.merchantId} completed successfully after ${attemptsMade} attempt(s)`,
       );
     });
   }
@@ -246,23 +256,22 @@ export class MerchantWebhookQueueService {
    */
   async addToQueue(
     merchantWebhook: MerchantWebhook,
-    webhookPayload: WebhookPayload
-  ) {
+    webhookPayload: WebhookPayload,
+  ): Promise<void> {
     // Create a unique job ID for tracking
     const uniqueId = `${merchantWebhook.merchantId}-${webhookPayload.transactionId}-${Date.now()}`;
 
     // Add job to the queue with retry configuration
-    const job = await this.webhookQueue.add(
-      { merchantWebhook, webhookPayload },
-      {
-        jobId: uniqueId,
-        attempts: 5, // Maximum retry attempts
-      }
-    );
+    const jobData: QueueJobData = {
+      merchantWebhook,
+      webhookPayload,
+    };
+
+    await this.webhookQueue.add(jobData);
 
     // Create database record to track this webhook delivery attempt
     const webhookEvent = new MerchantWebhookEventEntity();
-    webhookEvent.jobId = job.id.toString();
+    webhookEvent.jobId = uniqueId;
     webhookEvent.merchantId = merchantWebhook.merchantId;
     webhookEvent.webhookUrl = merchantWebhook.url;
     webhookEvent.payload = webhookPayload;
@@ -278,8 +287,6 @@ export class MerchantWebhookQueueService {
       merchantId: merchantWebhook.merchantId,
       transactionId: webhookPayload.transactionId,
     });
-
-    return job;
   }
 
   /**
@@ -355,7 +362,7 @@ export class MerchantWebhookQueueService {
         status: MerchantWebhookEventEntityStatus.PENDING, // Set back to pending
         error: undefined, // Clear previous error
         nextRetry: new Date(), // Schedule immediate retry
-      }
+      },
     );
 
     return job;
@@ -400,7 +407,7 @@ export class MerchantWebhookQueueService {
           [MerchantWebhookEventEntityStatus.PENDING]: 0,
           [MerchantWebhookEventEntityStatus.COMPLETED]: 0,
           [MerchantWebhookEventEntityStatus.FAILED]: 0,
-        }
+        },
       );
 
       // Calculate merchant-specific success rate
