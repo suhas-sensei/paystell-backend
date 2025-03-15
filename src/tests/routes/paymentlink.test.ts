@@ -24,7 +24,7 @@ describe('PaymentLinkController', () => {
         } as unknown as jest.Mocked<PaymentLinkService>;
         
         paymentLinkController = new PaymentLinkController();
-        (paymentLinkController as any).paymentLinkService = paymentLinkService;
+        (paymentLinkController as unknown as { paymentLinkService: PaymentLinkService }).paymentLinkService = paymentLinkService;
         
         jsonMock = jest.fn();
         statusMock = jest.fn().mockReturnValue({ json: jsonMock, send: jest.fn() });
