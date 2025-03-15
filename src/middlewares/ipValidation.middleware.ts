@@ -1,5 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 
+// Extender el tipo Request de Express globalmente
+import 'express';
+declare module 'express' {
+  interface Request {
+    validatedIp?: string;
+  }
+}
+
 /**
  * Middleware to validate and normalize IP addresses
  * Helps prevent IP spoofing by checking trusted headers in a specific order
@@ -26,7 +34,7 @@ export const validateIpAddress = (req: Request, res: Response, next: NextFunctio
     }
     
     // Add a custom property to store our validated IP
-    (req as any).validatedIp = validatedIp;
+    req.validatedIp = validatedIp;
     
     // Log suspicious requests with multiple different IP headers
     if (typeof forwardedFor === 'string' && typeof realIp === 'string' && 
