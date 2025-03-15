@@ -6,9 +6,9 @@ export const webhookUrlSchema = z.object({
 
 export const validateWebhookUrl = (url: string): boolean => {
     try {
-        webhookUrlSchema.parse({ url })
+        new URL(url);
         return true;
-    } catch (err) {
-        return false
+    } catch {
+        return false;
     }
 }
