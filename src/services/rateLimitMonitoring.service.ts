@@ -70,27 +70,25 @@ class RateLimitMonitoringService {
 
     // Create middleware to log rate limit events
     public createRateLimitMonitoringMiddleware(): (req: Request, res: Response, next: NextFunction) => void {
-        const self = this;
         return (req: Request, res: Response, next: NextFunction) => {
             const originalSend = res.send;
             
-            res.send = function(body): Response {
+            res.send = (body): Response => {
                 if (res.statusCode === 429) {
                     const event: RateLimitEvent = {
                         ip: req.ip || '0.0.0.0',
-                        endpoint: req.path,
-                        userAgent: req.headers['user-agent'] || 'unknown',
+                        endpoint: req.originalUrl,
+                        userAgent: req.headers['user-agent'],
                         timestamp: new Date(),
-                        email: (req.body as Record<string, unknown>)?.email as string | undefined,
-                        userId: (req.user as Record<string, unknown>)?.id as number | undefined
+                        userId: req.user?.id,
+                        email: req.user?.email
                     };
                     
-                    self.logRateLimitEvent(event).catch((error: Error) => {
-                        console.error('Failed to log rate limit event:', error);
+                    this.logRateLimitEvent(event).catch(err => {
+                        console.error('Failed to log rate limit event:', err);
                     });
                 }
-                
-                return originalSend.call(this, body);
+                return originalSend.call(res, body);
             };
             
             next();
