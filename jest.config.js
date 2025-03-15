@@ -9,4 +9,5 @@ module.exports = {
   moduleNameMapper: {
     "nodemailer": "<rootDir>/src/__mocks__/nodemailer.ts",
   },
+  modulePathIgnorePatterns: ["<rootDir>/dist/"],
 };
