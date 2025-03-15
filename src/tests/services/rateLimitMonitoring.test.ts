@@ -35,9 +35,8 @@ describe("Rate Limit Monitoring Service", () => {
   });
 
   it("should handle errors when logging events", async () => {
-    // Force an error by passing an invalid event
     const invalidEvent = {
-      ip: null, // This will cause an error in logRateLimitEvent
+      ip: null,
       endpoint: "/auth/login",
       timestamp: new Date(),
     } as unknown as RateLimitEvent;
@@ -51,12 +50,21 @@ describe("Rate Limit Monitoring Service", () => {
   });
 
   it("should check for suspicious activity", async () => {
-    // Mock the private method to test it
-    // @ts-expect-error - Accessing private method for testing
-    const checkSpy = jest.spyOn(
-      RateLimitMonitoringService,
+    const checkSpy = jest.fn();
+
+    const originalMethod = Object.getOwnPropertyDescriptor(
+      Object.getPrototypeOf(RateLimitMonitoringService),
       "checkForSuspiciousActivity",
-    ) as jest.SpyInstance;
+    );
+
+    Object.defineProperty(
+      Object.getPrototypeOf(RateLimitMonitoringService),
+      "checkForSuspiciousActivity",
+      {
+        value: checkSpy,
+        configurable: true,
+      },
+    );
 
     const event: RateLimitEvent = {
       ip: "192.168.1.1",
@@ -70,15 +78,19 @@ describe("Rate Limit Monitoring Service", () => {
 
     expect(checkSpy).toHaveBeenCalledWith(event);
 
-    checkSpy.mockRestore();
+    if (originalMethod) {
+      Object.defineProperty(
+        Object.getPrototypeOf(RateLimitMonitoringService),
+        "checkForSuspiciousActivity",
+        originalMethod,
+      );
+    }
   });
 
   it("should create middleware that logs rate limit events", () => {
-    // Create middleware
     const middleware =
       RateLimitMonitoringService.createRateLimitMonitoringMiddleware();
 
-    // Mock request and response
     const req = {
       ip: "192.168.1.1",
       path: "/auth/login",
@@ -102,15 +114,12 @@ describe("Rate Limit Monitoring Service", () => {
 
     const next = jest.fn() as NextFunction;
 
-    // Mock the logRateLimitEvent method
     const logSpy = jest
       .spyOn(RateLimitMonitoringService, "logRateLimitEvent")
       .mockResolvedValue();
 
-    // Call the middleware
     middleware(req, res, next);
 
-    // Simulate sending a response
     (res.send as jest.Mock)("Rate limit exceeded");
 
     expect(next).toHaveBeenCalled();
@@ -130,28 +139,24 @@ describe("Rate Limit Monitoring Service", () => {
     const middleware =
       RateLimitMonitoringService.createRateLimitMonitoringMiddleware();
 
-    // Mock request and response
     const req = {
       ip: "192.168.1.1",
       path: "/auth/login",
     } as unknown as Request;
 
     const res = {
-      statusCode: 200, // Not a rate limit error
+      statusCode: 200,
       send: jest.fn().mockReturnThis(),
     } as unknown as Response;
 
     const next = jest.fn() as NextFunction;
 
-    // Mock the logRateLimitEvent method
     const logSpy = jest
       .spyOn(RateLimitMonitoringService, "logRateLimitEvent")
       .mockResolvedValue();
 
-    // Call the middleware
     middleware(req, res, next);
 
-    // Simulate sending a response
     (res.send as jest.Mock)("Success");
 
     expect(next).toHaveBeenCalled();
