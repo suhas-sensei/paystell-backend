@@ -7,9 +7,9 @@ import {
 } from "typeorm";
 
 export enum NotificationType {
-    BROADCAST = "broadcast",
-    MERCHANT = "merchant",
-    ADMIN = "admin"
+  BROADCAST = "broadcast",
+  MERCHANT = "merchant",
+  ADMIN = "admin",
 }
 
 export enum NotificationCategory {

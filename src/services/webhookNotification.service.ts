@@ -16,29 +16,32 @@ export class WebhookNotificationService {
 
   constructor(
     merchantAuthService?: MerchantAuthService,
-    cryptoGeneratorService?: CryptoGeneratorService
+    cryptoGeneratorService?: CryptoGeneratorService,
   ) {
-    this.merchantAuthService = merchantAuthService ?? defaultMerchantAuthService;
-    this.cryptoGeneratorService = cryptoGeneratorService ?? defaultCryptoGeneratorService;
+    this.merchantAuthService =
+      merchantAuthService ?? defaultMerchantAuthService;
+    this.cryptoGeneratorService =
+      cryptoGeneratorService ?? defaultCryptoGeneratorService;
   }
 
   async sendWebhookNotification(
     webhookUrl: string,
     payload: WebhookPayload,
-    id: string
+    id: string,
   ): Promise<boolean> {
     try {
       const merchant = await this.merchantAuthService.getMerchantById(id);
-      
+
       if (!merchant || !merchant.secret) {
-        console.error('Invalid merchant or missing secret');
+        console.error("Invalid merchant or missing secret");
         return false;
       }
 
-      const signature = await this.cryptoGeneratorService.generateSignatureForWebhookPayload(
-        payload,
-        merchant.secret
-      );
+      const signature =
+        await this.cryptoGeneratorService.generateSignatureForWebhookPayload(
+          payload,
+          merchant.secret,
+        );
 
       await axios.post(webhookUrl, payload, {
         headers: {
@@ -57,14 +60,14 @@ export class WebhookNotificationService {
 
   async notifyPaymentUpdate(
     merchantWebhook: MerchantWebhook,
-    paymentDetails: Omit<WebhookPayload, "timestamp">
+    paymentDetails: Omit<WebhookPayload, "timestamp">,
   ): Promise<boolean> {
     const merchant = await this.merchantAuthService.getMerchantById(
-      merchantWebhook.merchantId
+      merchantWebhook.merchantId,
     );
 
     if (!merchant) {
-      console.error('Merchant not found');
+      console.error("Merchant not found");
       return false;
     }
 
@@ -80,7 +83,7 @@ export class WebhookNotificationService {
     return this.sendWebhookNotification(
       merchantWebhook.url,
       webhookPayload,
-      merchant.id
+      merchant.id,
     );
   }
 }

@@ -29,11 +29,11 @@ export const mockQueue = {
     completed: 5,
     failed: 2,
     delayed: 1,
-    waiting: 3
+    waiting: 3,
   }),
   getActiveCount: jest.fn().mockResolvedValue(1),
   getCompletedCount: jest.fn().mockResolvedValue(5),
   getFailedCount: jest.fn().mockResolvedValue(2),
   getDelayedCount: jest.fn().mockResolvedValue(1),
   getWaitingCount: jest.fn().mockResolvedValue(3),
-}; 
+};

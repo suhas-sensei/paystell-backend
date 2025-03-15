@@ -30,7 +30,7 @@ jest.mock("../../config/db", () => ({
 
 describe("MerchantWebhookQueueService", () => {
   let service: MerchantWebhookQueueService;
-  
+
   // Definir tipos de mocks
   interface MockQueue {
     add: jest.Mock;
@@ -53,7 +53,7 @@ describe("MerchantWebhookQueueService", () => {
     update: jest.Mock;
     createQueryBuilder: jest.Mock;
   }
-  
+
   let mockQueue: MockQueue;
   let _mockWebhookService: jest.Mocked<WebhookService>;
   let _mockNotificationService: jest.Mocked<NotificationService>;
@@ -99,7 +99,7 @@ describe("MerchantWebhookQueueService", () => {
         completed: 5,
         failed: 2,
         delayed: 1,
-        waiting: 3
+        waiting: 3,
       }),
       getActiveCount: jest.fn().mockResolvedValue(1),
       getCompletedCount: jest.fn().mockResolvedValue(5),
@@ -122,7 +122,7 @@ describe("MerchantWebhookQueueService", () => {
     it("should add a webhook to the queue and save event record", async () => {
       const result = await service.addToQueue(
         mockMerchantWebhook,
-        mockWebhookPayload as WebhookPayload
+        mockWebhookPayload as WebhookPayload,
       );
 
       expect(mockQueue.add).toHaveBeenCalledWith(
@@ -130,7 +130,7 @@ describe("MerchantWebhookQueueService", () => {
           merchantWebhook: mockMerchantWebhook,
           webhookPayload: mockWebhookPayload,
         },
-        { jobId: expect.any(String), attempts: 5 }
+        { jobId: expect.any(String), attempts: 5 },
       );
       expect(mockRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -138,7 +138,7 @@ describe("MerchantWebhookQueueService", () => {
           merchantId: "merchant-123",
           status: MerchantWebhookEventEntityStatus.PENDING,
           attemptsMade: 0,
-        })
+        }),
       );
       expect(result).toEqual({ id: "job-123" });
     });
@@ -153,7 +153,7 @@ describe("MerchantWebhookQueueService", () => {
       expect(mockQueue.on).toHaveBeenCalledWith("failed", expect.any(Function));
       expect(mockQueue.on).toHaveBeenCalledWith(
         "completed",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
   });
@@ -206,7 +206,7 @@ describe("MerchantWebhookQueueService", () => {
       expect(mockRepository.createQueryBuilder).toHaveBeenCalled();
       expect(mockRepository.createQueryBuilder().where).toHaveBeenCalledWith(
         "event.status = :status",
-        { status: MerchantWebhookEventEntityStatus.FAILED }
+        { status: MerchantWebhookEventEntityStatus.FAILED },
       );
     });
 
@@ -215,7 +215,7 @@ describe("MerchantWebhookQueueService", () => {
 
       expect(mockRepository.createQueryBuilder().andWhere).toHaveBeenCalledWith(
         "event.merchantId = :merchantId",
-        { merchantId: "merchant-123" }
+        { merchantId: "merchant-123" },
       );
     });
   });
@@ -227,7 +227,7 @@ describe("MerchantWebhookQueueService", () => {
       expect(mockRepository.createQueryBuilder).toHaveBeenCalled();
       expect(mockRepository.createQueryBuilder().where).toHaveBeenCalledWith(
         "event.status = :status",
-        { status: MerchantWebhookEventEntityStatus.PENDING }
+        { status: MerchantWebhookEventEntityStatus.PENDING },
       );
     });
   });
@@ -243,7 +243,7 @@ describe("MerchantWebhookQueueService", () => {
           status: MerchantWebhookEventEntityStatus.PENDING,
           error: undefined,
           nextRetry: expect.any(Date),
-        }
+        },
       );
     });
 
@@ -251,7 +251,7 @@ describe("MerchantWebhookQueueService", () => {
       mockQueue.getJob.mockResolvedValue(null);
 
       await expect(service.retryWebhook("non-existent-job")).rejects.toThrow(
-        "Webhook job not found"
+        "Webhook job not found",
       );
     });
   });
@@ -260,7 +260,9 @@ describe("MerchantWebhookQueueService", () => {
     it("should apply exponential backoff", () => {
       // Using the private method via type assertion for testing
       const calculateNextRetryDelay = (
-        (service as unknown) as { calculateNextRetryDelay(attemptsMade: number): number }
+        service as unknown as {
+          calculateNextRetryDelay(attemptsMade: number): number;
+        }
       ).calculateNextRetryDelay.bind(service);
 
       // base delay - first attempt
@@ -269,7 +271,9 @@ describe("MerchantWebhookQueueService", () => {
 
     it("should cap delay at 1 hour", () => {
       const calculateNextRetryDelay = (
-        (service as unknown) as { calculateNextRetryDelay(attemptsMade: number): number }
+        service as unknown as {
+          calculateNextRetryDelay(attemptsMade: number): number;
+        }
       ).calculateNextRetryDelay.bind(service);
 
       // Testing with a high attempt number that would exceed 1 hour

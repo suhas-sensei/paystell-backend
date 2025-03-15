@@ -18,28 +18,24 @@ export class MerchantWebhookQueueController {
   async getFailedWebhooks(req: Request, res: Response): Promise<Response> {
     try {
       // Extract query parameters with type safety
-      const merchantId = typeof req.query.merchantId === 'string' 
-        ? req.query.merchantId 
-        : undefined;
-      
+      const merchantId =
+        typeof req.query.merchantId === "string"
+          ? req.query.merchantId
+          : undefined;
+
       // Set limit with upper bound to prevent excessive queries
-      const limitNum = Math.min(
-        parseInt(req.query.limit as string) || 10, 
-        100
-      );
-      
+      const limitNum = Math.min(parseInt(req.query.limit as string) || 10, 100);
+
       // Ensure offset is never negative
-      const offsetNum = Math.max(
-        parseInt(req.query.offset as string) || 0,
-        0
-      );
+      const offsetNum = Math.max(parseInt(req.query.offset as string) || 0, 0);
 
       // Fetch failed webhook events from database
-      const failedWebhooks = await merchantWebhookQueueService.getFailedWebhookEvents(
-        merchantId,
-        limitNum,
-        offsetNum
-      );
+      const failedWebhooks =
+        await merchantWebhookQueueService.getFailedWebhookEvents(
+          merchantId,
+          limitNum,
+          offsetNum,
+        );
 
       return res.json({
         status: "success",
@@ -61,28 +57,24 @@ export class MerchantWebhookQueueController {
   async getPendingWebhooks(req: Request, res: Response): Promise<Response> {
     try {
       // Extract query parameters with type safety
-      const merchantId = typeof req.query.merchantId === 'string' 
-        ? req.query.merchantId 
-        : undefined;
-      
+      const merchantId =
+        typeof req.query.merchantId === "string"
+          ? req.query.merchantId
+          : undefined;
+
       // Set limit with upper bound to prevent excessive queries
-      const limitNum = Math.min(
-        parseInt(req.query.limit as string) || 10, 
-        100
-      );
-      
+      const limitNum = Math.min(parseInt(req.query.limit as string) || 10, 100);
+
       // Ensure offset is never negative
-      const offsetNum = Math.max(
-        parseInt(req.query.offset as string) || 0,
-        0
-      );
+      const offsetNum = Math.max(parseInt(req.query.offset as string) || 0, 0);
 
       // Fetch pending webhook events from database
-      const pendingWebhooks = await merchantWebhookQueueService.getPendingWebhookEvents(
-        merchantId,
-        limitNum,
-        offsetNum
-      );
+      const pendingWebhooks =
+        await merchantWebhookQueueService.getPendingWebhookEvents(
+          merchantId,
+          limitNum,
+          offsetNum,
+        );
 
       return res.json({
         status: "success",
@@ -138,12 +130,14 @@ export class MerchantWebhookQueueController {
   async getQueueMetrics(req: Request, res: Response): Promise<Response> {
     try {
       // Extract merchantId for filtering metrics
-      const merchantId = typeof req.query.merchantId === 'string' 
-        ? req.query.merchantId 
-        : undefined;
-      
+      const merchantId =
+        typeof req.query.merchantId === "string"
+          ? req.query.merchantId
+          : undefined;
+
       // Fetch queue metrics including success rates
-      const metrics = await merchantWebhookQueueService.getQueueMetrics(merchantId);
+      const metrics =
+        await merchantWebhookQueueService.getQueueMetrics(merchantId);
 
       return res.json({
         status: "success",

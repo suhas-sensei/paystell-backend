@@ -11,7 +11,7 @@ const defaultMerchantAuthService = new MerchantAuthService();
 const defaultCryptoGeneratorService = new CryptoGeneratorService();
 const defaultWebhookNotificationService = new WebhookNotificationService(
   defaultMerchantAuthService,
-  defaultCryptoGeneratorService
+  defaultCryptoGeneratorService,
 );
 
 export class WebhookController {
@@ -22,11 +22,13 @@ export class WebhookController {
   constructor(
     webhookService?: WebhookService,
     merchantAuthService?: MerchantAuthService,
-    webhookNotificationService?: WebhookNotificationService
+    webhookNotificationService?: WebhookNotificationService,
   ) {
     this.webhookService = webhookService || defaultWebhookService;
-    this.merchantAuthService = merchantAuthService || defaultMerchantAuthService;
-    this.webhookNotificationService = webhookNotificationService || defaultWebhookNotificationService;
+    this.merchantAuthService =
+      merchantAuthService || defaultMerchantAuthService;
+    this.webhookNotificationService =
+      webhookNotificationService || defaultWebhookNotificationService;
   }
 
   async handleWebhook(req: Request, res: Response): Promise<Response> {
@@ -43,7 +45,8 @@ export class WebhookController {
       }
 
       // Get merchant and webhook
-      const merchant = await this.merchantAuthService.getMerchantById(merchantId);
+      const merchant =
+        await this.merchantAuthService.getMerchantById(merchantId);
       if (!merchant) {
         return res.status(404).json({
           status: "error",
@@ -63,11 +66,12 @@ export class WebhookController {
 
       // Verify signature
       const payload = req.body as WebhookPayload;
-      const isValid = await this.webhookNotificationService.sendWebhookNotification(
-        webhook.url,
-        payload,
-        merchantId
-      );
+      const isValid =
+        await this.webhookNotificationService.sendWebhookNotification(
+          webhook.url,
+          payload,
+          merchantId,
+        );
 
       if (!isValid) {
         return res.status(401).json({
@@ -103,7 +107,8 @@ export class WebhookController {
       }
 
       // Get merchant and webhook
-      const merchant = await this.merchantAuthService.getMerchantById(merchantId);
+      const merchant =
+        await this.merchantAuthService.getMerchantById(merchantId);
       if (!merchant) {
         return res.status(404).json({
           status: "error",
@@ -133,16 +138,18 @@ export class WebhookController {
         metadata: {
           isTest: true,
           testGenerated: new Date().toISOString(),
-          message: "This is a test webhook notification. No actual transaction has occurred.",
+          message:
+            "This is a test webhook notification. No actual transaction has occurred.",
         },
       };
 
       // Send test webhook
-      const success = await this.webhookNotificationService.sendWebhookNotification(
-        webhook.url,
-        testPayload,
-        merchantId
-      );
+      const success =
+        await this.webhookNotificationService.sendWebhookNotification(
+          webhook.url,
+          testPayload,
+          merchantId,
+        );
 
       if (!success) {
         return res.status(500).json({

@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import SessionService from "../services/session.service";
 
-export const createSession = async (req: Request, res: Response): Promise<Response> => {
+export const createSession = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     const { userId } = req.body;
     const session = await SessionService.createSession(userId);
@@ -12,10 +15,13 @@ export const createSession = async (req: Request, res: Response): Promise<Respon
   }
 };
 
-export const deleteSession = async (req: Request, res: Response): Promise<Response> => {
+export const deleteSession = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token) throw new Error("Token missing") // check if token is in the headers
+    if (!token) throw new Error("Token missing"); // check if token is in the headers
 
     await SessionService.deleteSession(token);
     return res.status(200).json({ message: "Session deleted successfully" });

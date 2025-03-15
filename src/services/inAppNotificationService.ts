@@ -28,12 +28,12 @@ export class NotificationService {
 
   constructor() {
     this.notificationRepository = AppDataSource.getRepository(
-      InAppNotificationEntity
+      InAppNotificationEntity,
     );
   }
 
   async createNotification(
-    params: CreateNotificationParams
+    params: CreateNotificationParams,
   ): Promise<InAppNotificationEntity> {
     const notification = new InAppNotificationEntity();
     notification.title = params.title;

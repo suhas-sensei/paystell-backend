@@ -26,20 +26,20 @@
 //   });
 
 //   it('should create a new user', async () => {
-//     const userData = { 
-//       name: 'Test', 
-//       email: 'test@example.com', 
-//       password: 'password123', 
-//       role: UserRole.USER, 
-//       logoUrl: 'https://example.com/logo.png', 
-//       walletAddress: '0x123456789abcdef', 
-//       isEmailVerified: false, 
-//       isWalletVerified: false, 
-//       createdAt: new Date(), 
-//       updatedAt: new Date(), 
-//       hashPassword: jest.fn(), 
-//       emailVerifications: [], 
-//       sessions: []        
+//     const userData = {
+//       name: 'Test',
+//       email: 'test@example.com',
+//       password: 'password123',
+//       role: UserRole.USER,
+//       logoUrl: 'https://example.com/logo.png',
+//       walletAddress: '0x123456789abcdef',
+//       isEmailVerified: false,
+//       isWalletVerified: false,
+//       createdAt: new Date(),
+//       updatedAt: new Date(),
+//       hashPassword: jest.fn(),
+//       emailVerifications: [],
+//       sessions: []
 //     };
 //     const createdUser = { id: 1, ...userData };
 
@@ -56,20 +56,20 @@
 //   });
 
 //   it('should get a user by id', async () => {
-//     const userData = { 
-//       name: 'Test', 
-//       email: 'test@example.com', 
-//       password: 'password123', 
-//       role: UserRole.USER, 
-//       logoUrl: 'https://example.com/logo.png', 
-//       walletAddress: '0x123456789abcdef', 
-//       isEmailVerified: false, 
-//       isWalletVerified: false, 
-//       createdAt: new Date(), 
-//       updatedAt: new Date(), 
-//       hashPassword: jest.fn(), 
-//       emailVerifications: [], 
-//       sessions: []        
+//     const userData = {
+//       name: 'Test',
+//       email: 'test@example.com',
+//       password: 'password123',
+//       role: UserRole.USER,
+//       logoUrl: 'https://example.com/logo.png',
+//       walletAddress: '0x123456789abcdef',
+//       isEmailVerified: false,
+//       isWalletVerified: false,
+//       createdAt: new Date(),
+//       updatedAt: new Date(),
+//       hashPassword: jest.fn(),
+//       emailVerifications: [],
+//       sessions: []
 //     };
 //     const user = { id: 1, ...userData };
 
@@ -86,20 +86,20 @@
 //   });
 
 //   it('should update a user', async () => {
-//     const userData = { 
-//       name: 'Test', 
-//       email: 'test@example.com', 
-//       password: 'password123', 
-//       role: UserRole.USER, 
-//       logoUrl: 'https://example.com/logo.png', 
-//       walletAddress: '0x123456789abcdef', 
-//       isEmailVerified: false, 
-//       isWalletVerified: false, 
-//       createdAt: new Date(), 
-//       updatedAt: new Date(), 
-//       hashPassword: jest.fn(), 
-//       emailVerifications: [], 
-//       sessions: []        
+//     const userData = {
+//       name: 'Test',
+//       email: 'test@example.com',
+//       password: 'password123',
+//       role: UserRole.USER,
+//       logoUrl: 'https://example.com/logo.png',
+//       walletAddress: '0x123456789abcdef',
+//       isEmailVerified: false,
+//       isWalletVerified: false,
+//       createdAt: new Date(),
+//       updatedAt: new Date(),
+//       hashPassword: jest.fn(),
+//       emailVerifications: [],
+//       sessions: []
 //     };
 //     const updatedUser = { id: 1, ...userData };
 

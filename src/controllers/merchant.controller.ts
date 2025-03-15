@@ -48,7 +48,9 @@ export class MerchantController {
     try {
       const { url } = req.body;
       const merchantId = req.merchant?.id;
-      const merchant = await merchantAuthService.getMerchantById(merchantId ?? "");
+      const merchant = await merchantAuthService.getMerchantById(
+        merchantId ?? "",
+      );
 
       if (!merchant) {
         return res.status(404).json({ error: "Merchant not found" });
@@ -96,7 +98,9 @@ export class MerchantController {
       }
 
       // Get the webhook first to verify it exists
-      const existingWebhook = await webhookService.getMerchantWebhook(merchantId ?? "");
+      const existingWebhook = await webhookService.getMerchantWebhook(
+        merchantId ?? "",
+      );
 
       if (!existingWebhook) {
         return res.status(404).json({

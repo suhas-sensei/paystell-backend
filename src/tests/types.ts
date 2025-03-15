@@ -3,4 +3,4 @@ export interface MockFunction<T = unknown, R = unknown> {
   mockImplementation: (fn: (...args: T[]) => R) => void;
   mockResolvedValue: (value: R) => void;
   mockRejectedValue: (error: Error) => void;
-} 
+}

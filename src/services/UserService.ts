@@ -1,10 +1,10 @@
-import { Repository } from 'typeorm';
-import AppDataSource from '../config/db';
-import { User } from '../entities/User';
-import { validate } from 'class-validator';
-import { CreateUserDTO } from '../dtos/CreateUserDTO';
-import { UpdateUserDTO } from '../dtos/UpdateUserDTO';
-import { hash } from 'bcrypt';
+import { Repository } from "typeorm";
+import AppDataSource from "../config/db";
+import { User } from "../entities/User";
+import { validate } from "class-validator";
+import { CreateUserDTO } from "../dtos/CreateUserDTO";
+import { UpdateUserDTO } from "../dtos/UpdateUserDTO";
+import { hash } from "bcrypt";
 
 export class UserService {
   private userRepository: Repository<User>;
@@ -18,12 +18,16 @@ export class UserService {
     const errors = await validate(dto);
 
     if (errors.length > 0) {
-      throw new Error(errors.map(err => Object.values(err.constraints || {})).join(', '));
+      throw new Error(
+        errors.map((err) => Object.values(err.constraints || {})).join(", "),
+      );
     }
 
-    const existingUser = await this.userRepository.findOneBy({ email: data.email });
+    const existingUser = await this.userRepository.findOneBy({
+      email: data.email,
+    });
     if (existingUser) {
-      throw new Error('Email already exists');
+      throw new Error("Email already exists");
     }
 
     const newUser = this.userRepository.create(data);
@@ -34,7 +38,6 @@ export class UserService {
     return await this.userRepository.findOneBy({ id });
   }
 
-
   async getAllUsers(): Promise<User[]> {
     return await this.userRepository.find();
   }
@@ -42,13 +45,15 @@ export class UserService {
   async updateUser(id: number, data: UpdateUserDTO): Promise<User> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
-    if (data.email && (data.email !== user.email)) {
-      const existingUser = await this.userRepository.findOneBy({ email: data.email });
+    if (data.email && data.email !== user.email) {
+      const existingUser = await this.userRepository.findOneBy({
+        email: data.email,
+      });
       if (existingUser) {
-        throw new Error('Email already exists');
+        throw new Error("Email already exists");
       }
     }
 
@@ -63,7 +68,7 @@ export class UserService {
   async deleteUser(id: number): Promise<void> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     await this.userRepository.remove(user);

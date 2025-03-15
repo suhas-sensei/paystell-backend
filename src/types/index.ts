@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
 export interface TypedRequest<T = unknown> extends Request {
   body: T;
@@ -26,4 +26,4 @@ export interface MerchantData {
   name: string;
   apiKey: string;
   // Añade más campos según necesites
-} 
+}

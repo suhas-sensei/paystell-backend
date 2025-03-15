@@ -1,6 +1,9 @@
 import express, { Response, NextFunction, RequestHandler } from "express";
 import { Request } from "express-serve-static-core";
-import { createSession, deleteSession } from "../controllers/session.controller";
+import {
+  createSession,
+  deleteSession,
+} from "../controllers/session.controller";
 import { UserRole } from "../enums/UserRole";
 
 const router = express.Router();
@@ -14,7 +17,13 @@ interface CustomRequest extends Request {
   };
 }
 
-const asyncHandler = (fn: (req: CustomRequest, res: Response, next: NextFunction) => Promise<unknown>): RequestHandler => {
+const asyncHandler = (
+  fn: (
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction,
+  ) => Promise<unknown>,
+): RequestHandler => {
   return (req, res, next) => {
     Promise.resolve(fn(req as CustomRequest, res, next)).catch(next);
   };

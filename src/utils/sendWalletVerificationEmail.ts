@@ -1,6 +1,6 @@
-import { sendEmail } from './mailer';
-import { walletVerificationEmailTemplate } from '../template/wallet-verification.template';
-import { generateVerificationToken } from './token';
+import { sendEmail } from "./mailer";
+import { walletVerificationEmailTemplate } from "../template/wallet-verification.template";
+import { generateVerificationToken } from "./token";
 
 /**
  * Sends a wallet verification email.
@@ -8,15 +8,23 @@ import { generateVerificationToken } from './token';
  * @param verificationCode The verification code.
  * @param walletAddress The Stellar wallet address being verified.
  */
-export const sendWalletVerificationEmail = async (email: string, verificationCode: string, walletAddress: string): Promise<void> => {
+export const sendWalletVerificationEmail = async (
+  email: string,
+  verificationCode: string,
+  walletAddress: string,
+): Promise<void> => {
   const token = generateVerificationToken(walletAddress);
   const verifyUrl = `https://paystell.com/verify-wallet?token=${token}`;
 
-  const emailBody = walletVerificationEmailTemplate(verificationCode, walletAddress, verifyUrl);
+  const emailBody = walletVerificationEmailTemplate(
+    verificationCode,
+    walletAddress,
+    verifyUrl,
+  );
 
   await sendEmail({
     to: email,
-    subject: 'Verify Your Stellar Wallet',
+    subject: "Verify Your Stellar Wallet",
     html: emailBody,
   });
 };
