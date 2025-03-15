@@ -258,9 +258,9 @@ describe("MerchantWebhookQueueService", () => {
 
   describe("calculateNextRetryDelay", () => {
     it("should apply exponential backoff", () => {
-      // Using the private method via any type cast for testing
+      // Using the private method via type assertion for testing
       const calculateNextRetryDelay = (
-        service as any
+        (service as unknown) as { calculateNextRetryDelay(attemptsMade: number): number }
       ).calculateNextRetryDelay.bind(service);
 
       // base delay - first attempt
@@ -269,7 +269,7 @@ describe("MerchantWebhookQueueService", () => {
 
     it("should cap delay at 1 hour", () => {
       const calculateNextRetryDelay = (
-        service as any
+        (service as unknown) as { calculateNextRetryDelay(attemptsMade: number): number }
       ).calculateNextRetryDelay.bind(service);
 
       // Testing with a high attempt number that would exceed 1 hour
