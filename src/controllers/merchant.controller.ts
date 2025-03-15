@@ -86,7 +86,6 @@ export class MerchantController {
   async updateWebhook(req: Request, res: Response): Promise<Response> {
     try {
       const { url } = req.body;
-      const { webhookId } = req.params;
       const merchantId = req.merchant.id;
 
       // Validate webhook URL
@@ -126,7 +125,6 @@ export class MerchantController {
 
   async deleteWebhook(req: Request, res: Response): Promise<Response> {
     try {
-      const { webhookId } = req.params;
       const merchantId = req.merchant.id;
 
       // Get the webhook first to verify it exists
@@ -156,7 +154,6 @@ export class MerchantController {
 
   async getWebhook(req: Request, res: Response): Promise<Response> {
     try {
-      const { webhookId } = req.params;
       const merchantId = req.merchant.id;
 
       // Get webhook from database
