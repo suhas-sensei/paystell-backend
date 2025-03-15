@@ -1,5 +1,5 @@
 import request from 'supertest';
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import { 
     loginRateLimiter, 
@@ -98,10 +98,26 @@ describe('Auth Routes with Rate Limiting', () => {
         // Create routes with rate limiters manually instead of using the authRoutes
         const router = express.Router();
         
-        router.post('/login', loginRateLimiter, (req: Request, res: Response) => authController.login(req, res));
-        router.post('/register', registerRateLimiter, (req: Request, res: Response) => authController.register(req, res));
-        router.post('/login-2fa', twoFactorRateLimiter, (req: Request, res: Response) => authController.loginWith2FA(req, res));
-        router.post('/forgot-password', passwordResetRateLimiter, (req: Request, res: Response) => authController.forgotPassword(req, res));
+        const loginHandler: RequestHandler = (req, res) => {
+            authController.login(req, res);
+        };
+
+        const registerHandler: RequestHandler = (req, res) => {
+            authController.register(req, res);
+        };
+
+        const loginWith2FAHandler: RequestHandler = (req, res) => {
+            authController.loginWith2FA(req, res);
+        };
+
+        const forgotPasswordHandler: RequestHandler = (req, res) => {
+            authController.forgotPassword(req, res);
+        };
+
+        router.post('/login', loginRateLimiter, loginHandler);
+        router.post('/register', registerRateLimiter, registerHandler);
+        router.post('/login-2fa', twoFactorRateLimiter, loginWith2FAHandler);
+        router.post('/forgot-password', passwordResetRateLimiter, forgotPasswordHandler);
         
         app.use('/auth', router);
     });
