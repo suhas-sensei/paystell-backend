@@ -15,7 +15,7 @@
 //  let mockQueue: MockQueue;
 
 // Setup mock queue
-mockQueue = {
+export const mockQueue = {
   add: jest.fn().mockResolvedValue({ id: "job-123" }),
   process: jest.fn(),
   on: jest.fn(),
