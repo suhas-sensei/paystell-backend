@@ -50,7 +50,8 @@ describe('Rate Limit Monitoring Service', () => {
     
     it('should check for suspicious activity', async () => {
         // Mock the private method to test it
-        const checkSpy = jest.spyOn(RateLimitMonitoringService as any, 'checkForSuspiciousActivity');
+        // @ts-expect-error - Accessing private method for testing
+        const checkSpy = jest.spyOn(RateLimitMonitoringService, 'checkForSuspiciousActivity') as jest.SpyInstance;
         
         const event: RateLimitEvent = {
             ip: '192.168.1.1',
