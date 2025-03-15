@@ -1,5 +1,4 @@
 import AppDataSource from "../config/db";
-import SessionService from "../services/session.service";
 import { User } from "../entities/User";
 
 describe("SessionService", () => {
