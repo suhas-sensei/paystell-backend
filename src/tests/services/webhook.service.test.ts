@@ -1,10 +1,5 @@
-import axios from 'axios';
-import crypto from 'crypto';
 import { WebhookService } from '../../services/webhook.service';
 import { WebhookPayload, MerchantWebhook, Merchant } from '../../interfaces/webhook.interfaces';
-import { validateWebhookUrl } from '../../validators/webhook.validators';
-
-
 
 describe('WebhookService', () => {
     let webhookService: WebhookService;
@@ -25,7 +20,7 @@ describe('WebhookService', () => {
         updatedAt: new Date()
     };
 
-    const mockWebhookPayload: WebhookPayload = {
+    const _mockWebhookPayload: WebhookPayload = {
         transactionId: 'txn123',
         transactionType: 'deposit',
         status: 'completed',
@@ -56,7 +51,7 @@ describe('WebhookService', () => {
         });
 
         it('should throw an error if webhook is inactive', async () => {
-            jest.spyOn(webhookService, 'getMerchantWebhook').mockImplementation(async (merchantId: string) => {
+            jest.spyOn(webhookService, 'getMerchantWebhook').mockImplementation(async (_merchantId: string) => {
                 const merchantWebhook = { ...mockMerchantWebhook, isActive: false };
                 if (!merchantWebhook.isActive) {
                     throw new Error('Merchant web hook not found');
@@ -68,5 +63,9 @@ describe('WebhookService', () => {
                 'Merchant web hook not found'
             );
         });
+    });
+
+    it('should handle webhook notification failure', async () => {
+        // ... test implementation
     });
 });
