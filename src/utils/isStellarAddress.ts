@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 // This needs to be changed depending on the Stellar network you are using Mainet or testnet
 //testnet
@@ -21,10 +21,11 @@ export const checkStellarWalletExists = async (address: string): Promise<boolean
     try {
         await axios.get(`${HORIZON_API_URL}${address}`);
         return true;
-    } catch (error: any) {
-        if (error.response && error.response.status === 404) {
+    } catch (error) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response && axiosError.response.status === 404) {
             return false; // The account does not exist
         }
-        throw new Error(`Error checking Stellar account: ${error.message}`);
+        throw new Error(`Error checking Stellar account: ${axiosError.message}`);
     }
 };
