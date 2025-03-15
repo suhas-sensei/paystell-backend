@@ -47,8 +47,8 @@ export class MerchantController {
   async registerWebhook(req: Request, res: Response): Promise<Response> {
     try {
       const { url } = req.body;
-      const merchantId = req.merchant.id;
-      const merchant = await merchantAuthService.getMerchantById(merchantId);
+      const merchantId = req.merchant?.id;
+      const merchant = await merchantAuthService.getMerchantById(merchantId ?? "");
 
       if (!merchant) {
         return res.status(404).json({ error: "Merchant not found" });
@@ -64,7 +64,7 @@ export class MerchantController {
       // Create webhook in database
       const webhook: MerchantWebhook = {
         id: crypto.randomUUID(),
-        merchantId,
+        merchantId: merchantId ?? "",
         url,
         isActive: true,
         createdAt: new Date(),
@@ -86,7 +86,7 @@ export class MerchantController {
   async updateWebhook(req: Request, res: Response): Promise<Response> {
     try {
       const { url } = req.body;
-      const merchantId = req.merchant.id;
+      const merchantId = req.merchant?.id;
 
       // Validate webhook URL
       if (!validateWebhookUrl(url)) {
@@ -96,7 +96,7 @@ export class MerchantController {
       }
 
       // Get the webhook first to verify it exists
-      const existingWebhook = await webhookService.getMerchantWebhook(merchantId);
+      const existingWebhook = await webhookService.getMerchantWebhook(merchantId ?? "");
 
       if (!existingWebhook) {
         return res.status(404).json({
@@ -125,10 +125,10 @@ export class MerchantController {
 
   async deleteWebhook(req: Request, res: Response): Promise<Response> {
     try {
-      const merchantId = req.merchant.id;
+      const merchantId = req.merchant?.id;
 
       // Get the webhook first to verify it exists
-      const webhook = await webhookService.getMerchantWebhook(merchantId);
+      const webhook = await webhookService.getMerchantWebhook(merchantId ?? "");
 
       if (!webhook) {
         return res.status(404).json({
@@ -154,7 +154,7 @@ export class MerchantController {
 
   async getWebhook(req: Request, res: Response): Promise<Response> {
     try {
-      const merchantId = req.merchant.id;
+      const merchantId = req.merchant?.id ?? "";
 
       // Get webhook from database
       const webhook = await webhookService.getMerchantWebhook(merchantId);
