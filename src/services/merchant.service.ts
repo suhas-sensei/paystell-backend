@@ -1,4 +1,4 @@
-import { Merchant, MerchantWebhook } from "../interfaces/webhook.interfaces";
+import { Merchant } from "../interfaces/webhook.interfaces";
 import { Repository } from "typeorm";
 import { MerchantEntity } from "../entities/Merchant.entity";
 import AppDataSource from "../config/db";
