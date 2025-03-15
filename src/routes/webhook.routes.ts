@@ -2,7 +2,6 @@ import express from "express";
 import { MerchantController } from '../controllers/merchant.controller'
 import { authenticateMerchant, authenticateStellarWebhook, asyncHandler } from "../middlewares/merchantAuth";
 import { WebhookController } from "../controllers/webhook.controller";
-import { _webhookRateLimiter } from "../middlewares/rateLimiter.middleware";
 
 const router = express.Router();
 const merchantController = new MerchantController();
