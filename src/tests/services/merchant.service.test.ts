@@ -23,27 +23,22 @@ describe("MerchantAuthService", () => {
         updatedAt: new Date(),
       };
 
-      // @ts-expect-error - Accessing private method for testing
-      jest
-        .spyOn(merchantAuthService, "findMerchantByApiKey")
-        .mockResolvedValue(mockMerchant);
+      (merchantAuthService.validateApiKey as jest.Mock).mockResolvedValue(
+        mockMerchant,
+      );
 
-      // @ts-expect-error - Accessing private method for testing
-      const result =
-        await merchantAuthService.findMerchantByApiKey("valid_api_key");
+      const result = await merchantAuthService.validateApiKey("valid_api_key");
       expect(result).toEqual(mockMerchant);
     });
 
-    it("should return null when the API key is invalid", async () => {
-      // @ts-expect-error - Accessing private method for testing
-      jest
-        .spyOn(merchantAuthService, "findMerchantByApiKey")
-        .mockResolvedValue(null);
+    it("should throw an error when the API key is invalid", async () => {
+      (merchantAuthService.validateApiKey as jest.Mock).mockRejectedValue(
+        new Error("Merchant does not exist or is not active"),
+      );
 
-      // @ts-expect-error - Accessing private method for testing
-      const result =
-        await merchantAuthService.findMerchantByApiKey("invalid_api_key");
-      expect(result).toBeNull();
+      await expect(
+        merchantAuthService.validateApiKey("invalid_api_key"),
+      ).rejects.toThrow("Merchant does not exist or is not active");
     });
   });
 
