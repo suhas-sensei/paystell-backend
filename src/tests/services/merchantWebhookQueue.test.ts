@@ -2,10 +2,6 @@ import { MerchantWebhookQueueService } from "../../services/merchantWebhookQueue
 import { WebhookService } from "../../services/webhook.service";
 import { NotificationService } from "../../services/inAppNotificationService";
 import { MerchantWebhookEventEntityStatus } from "../../enums/MerchantWebhookEventStatus";
-import {
-  NotificationType,
-  NotificationCategory,
-} from "../../entities/InAppNotification.entity";
 import * as Bull from "bull";
 import { WebhookPayload } from "src/interfaces/webhook.interfaces";
 
@@ -34,10 +30,34 @@ jest.mock("../../config/db", () => ({
 
 describe("MerchantWebhookQueueService", () => {
   let service: MerchantWebhookQueueService;
-  let mockQueue: any;
-  let mockWebhookService: jest.Mocked<WebhookService>;
-  let mockNotificationService: jest.Mocked<NotificationService>;
-  let mockRepository: any;
+  
+  // Definir tipos de mocks
+  interface MockQueue {
+    add: jest.Mock;
+    process: jest.Mock;
+    on: jest.Mock;
+    getJobs: jest.Mock;
+    getJob: jest.Mock;
+    getJobCounts: jest.Mock;
+    getActiveCount: jest.Mock;
+    getCompletedCount: jest.Mock;
+    getFailedCount: jest.Mock;
+    getDelayedCount: jest.Mock;
+    getWaitingCount: jest.Mock;
+  }
+
+  interface MockRepository {
+    save: jest.Mock;
+    find: jest.Mock;
+    findOne: jest.Mock;
+    update: jest.Mock;
+    createQueryBuilder: jest.Mock;
+  }
+  
+  let mockQueue: MockQueue;
+  let _mockWebhookService: jest.Mocked<WebhookService>;
+  let _mockNotificationService: jest.Mocked<NotificationService>;
+  let mockRepository: MockRepository;
 
   const mockMerchantWebhook = {
     id: "webhook-123",
@@ -73,6 +93,14 @@ describe("MerchantWebhookQueueService", () => {
         id: "job-123",
         retry: jest.fn().mockResolvedValue({}),
       }),
+      getJobs: jest.fn().mockResolvedValue([]),
+      getJobCounts: jest.fn().mockResolvedValue({
+        active: 1,
+        completed: 5,
+        failed: 2,
+        delayed: 1,
+        waiting: 3
+      }),
       getActiveCount: jest.fn().mockResolvedValue(1),
       getCompletedCount: jest.fn().mockResolvedValue(5),
       getFailedCount: jest.fn().mockResolvedValue(2),
@@ -83,9 +111,9 @@ describe("MerchantWebhookQueueService", () => {
 
     // Setup service
     service = new MerchantWebhookQueueService();
-    mockWebhookService =
+    _mockWebhookService =
       WebhookService as unknown as jest.Mocked<WebhookService>;
-    mockNotificationService =
+    _mockNotificationService =
       NotificationService as unknown as jest.Mocked<NotificationService>;
     mockRepository = require("../../config/db").getRepository();
   });
