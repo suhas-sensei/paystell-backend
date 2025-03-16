@@ -47,13 +47,10 @@ jobs:
         run: docker build -t paystell-backend .
 
       - name: Run Docker Containers
-        run: |
-          docker compose up -d
-          sleep 15  # Esperar a que los contenedores estén listos
-          docker ps  # Verificar que los contenedores están corriendo
+        run: docker compose up -d
 
       - name: Run Tests in Docker
-        run: docker exec paystell-backend npx jest --maxWorkers=2
+        run: docker exec paystell-backend npm test
 
       - name: Stop and Remove Docker Containers
-        run: docker compose down --volumes --remove-orphans
+        run: docker compose down
