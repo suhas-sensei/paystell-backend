@@ -38,6 +38,18 @@ export class PaymentLinkController {
     }
   }
 
+  async getPaymentLinksByUserId(req: Request, res: Response): Promise<Response> {
+    try {
+      const paymentLinks = await this.paymentLinkService.getPaymentLinksByUserId(
+        req.params.userId,
+      );
+      return res.json(paymentLinks);
+    } catch (error) {
+      return res.status(500).json({ message: (error as Error).message });
+    }
+  }
+
+
   async updatePaymentLink(req: Request, res: Response): Promise<Response> {
     try {
       const updatedPaymentLink =
