@@ -1,6 +1,14 @@
 import { Repository } from "typeorm";
 import { PaymentLink } from "../entities/PaymentLink";
 
+interface PaginationResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export class PaymentLinkService {
   constructor(
     private readonly paymentLinkRepository: Repository<PaymentLink>,
@@ -28,9 +36,26 @@ export class PaymentLinkService {
     return result.affected !== 0;
   }
 
-  async getPaymentLinksByUserId(userId: string): Promise<PaymentLink[]> {
-    return await this.paymentLinkRepository.find({
+  async getPaymentLinksByUserId(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginationResult<PaymentLink>> {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.paymentLinkRepository.findAndCount({
       where: { userId: Number(userId) },
+      skip,
+      take: limit,
+      order: { createdAt: "DESC" },
     });
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }
