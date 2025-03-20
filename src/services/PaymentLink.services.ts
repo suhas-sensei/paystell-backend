@@ -27,4 +27,10 @@ export class PaymentLinkService {
     const result = await this.paymentLinkRepository.delete(id);
     return result.affected !== 0;
   }
+
+  async getPaymentLinksByUserId(userId: string): Promise<PaymentLink[]> {
+    return await this.paymentLinkRepository.find({
+      where: { userId: Number(userId) },
+    });
+  }
 }
