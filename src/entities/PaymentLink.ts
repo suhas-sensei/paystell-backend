@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from "typeorm";
+import { User } from "./User";
 
 @Entity()
 export class PaymentLink {
@@ -41,4 +44,11 @@ export class PaymentLink {
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "userId" })
+  user: User;
+
+  @Column()
+  userId: number;
 }
