@@ -7,6 +7,7 @@ import {
 } from "express";
 import { PaymentLinkController } from "../controllers/PaymentLink.controller";
 import { UserRole } from "../enums/UserRole";
+import { paymentLinkLimiter } from "../middleware/rateLimiter";
 
 interface CustomRequest extends Request {
   user?: {
@@ -34,6 +35,7 @@ const asyncHandler = <T>(fn: AsyncRouteHandler<T>): RequestHandler => {
 
 router.post(
   "/",
+  paymentLinkLimiter,
   asyncHandler(
     paymentLinkController.createPaymentLink.bind(paymentLinkController),
   ),
@@ -42,6 +44,12 @@ router.get(
   "/:id",
   asyncHandler(
     paymentLinkController.getPaymentLinkById.bind(paymentLinkController),
+  ),
+);
+router.get(
+  "/user/:userId",
+  asyncHandler(
+    paymentLinkController.getPaymentLinksByUserId.bind(paymentLinkController),
   ),
 );
 router.put(

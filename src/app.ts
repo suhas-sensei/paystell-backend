@@ -10,7 +10,7 @@ import cors from "cors";
 // Route imports
 import sessionRouter from "./routes/session.routes";
 import emailVerification from "./routes/emailVerification.routes";
-import PaymentRoute from "./routes/ParymentLink.routes";
+import PaymentRoute from "./routes/PaymentLink.routes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import healthRouter from "./routes/health.routes";
