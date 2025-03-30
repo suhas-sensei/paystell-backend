@@ -37,7 +37,7 @@ describe("SalesSummaryController", () => {
     // Initialize controller with mock service
     salesSummaryController = new SalesSummaryController();
     // Override the service with our mock
-    (salesSummaryController as any).salesSummaryService = mockSalesSummaryService;
+    (salesSummaryController as unknown as { salesSummaryService: SalesSummaryService }).salesSummaryService = mockSalesSummaryService;
 
     // Setup mock request and response
     mockRequest = {
