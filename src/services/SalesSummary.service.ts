@@ -1,4 +1,4 @@
-import { Between, getRepository } from "typeorm";
+import { getRepository } from "typeorm";
 import { Payment } from "../entities/Payment";
 import { PaymentLink } from "../entities/PaymentLink";
 import { User } from "../entities/User";
@@ -39,27 +39,6 @@ export class SalesSummaryService {
     });
 
     const paymentLinkIds = paymentLinks.map(link => link.id);
-
-    // Build query conditions
-    const whereConditions: any = {
-      status: "completed",
-      paymentLink: {
-        id: paymentLinkIds.length > 0 ? paymentLinkIds : [-1], // If no links found, use an impossible ID
-      },
-    };
-
-    // Add date filters if provided
-    if (startDate || endDate) {
-      whereConditions.createdAt = {};
-      
-      if (startDate) {
-        whereConditions.createdAt = { ...whereConditions.createdAt, gte: startDate };
-      }
-      
-      if (endDate) {
-        whereConditions.createdAt = { ...whereConditions.createdAt, lte: endDate };
-      }
-    }
 
     // Calculate the sum of all completed payments
     const result = await this.paymentRepository
