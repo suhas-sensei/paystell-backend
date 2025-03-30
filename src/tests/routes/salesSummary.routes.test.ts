@@ -19,7 +19,7 @@ describe("Sales Summary Routes", () => {
     // Reset mocks
     jest.clearAllMocks();
 
-    // Create mock controller
+    // Creates mock controller
     mockSalesSummaryController = {
       getTotalSales: jest.fn(),
       getSalesByTimePeriod: jest.fn(),
