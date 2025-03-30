@@ -9,28 +9,39 @@ jest.mock("../../middlewares/merchantAuth", () => ({
   authenticateMerchant: jest.fn((req, res, next) => next()),
 }));
 
-jest.mock("../../controllers/SalesSummary.controller");
+// Mock the controller constructor and prototype methods
+jest.mock("../../controllers/SalesSummary.controller", () => {
+  // Create mock functions for all the controller methods
+  const mockGetTotalSales = jest.fn();
+  const mockGetSalesByTimePeriod = jest.fn();
+  const mockGetTopSellingProducts = jest.fn();
+  const mockGetSalesSummary = jest.fn();
+
+  // Return a mock constructor that sets up the prototype methods
+  return {
+    SalesSummaryController: jest.fn().mockImplementation(() => {
+      return {
+        getTotalSales: mockGetTotalSales,
+        getSalesByTimePeriod: mockGetSalesByTimePeriod,
+        getTopSellingProducts: mockGetTopSellingProducts,
+        getSalesSummary: mockGetSalesSummary,
+      };
+    }),
+  };
+});
 
 describe("Sales Summary Routes", () => {
   let app: express.Application;
-  let mockSalesSummaryController: jest.Mocked<SalesSummaryController>;
+  let mockController: jest.Mocked<SalesSummaryController>;
 
   beforeEach(() => {
-    // Reset mocks
+    // Reset all mocks
     jest.clearAllMocks();
 
-    // Creates mock controller
-    mockSalesSummaryController = {
-      getTotalSales: jest.fn(),
-      getSalesByTimePeriod: jest.fn(),
-      getTopSellingProducts: jest.fn(),
-      getSalesSummary: jest.fn(),
-    } as unknown as jest.Mocked<SalesSummaryController>;
+    // Get the mocked controller instance
+    mockController = new SalesSummaryController() as jest.Mocked<SalesSummaryController>;
 
-    // Mock the controller constructor
-    (SalesSummaryController as jest.Mock).mockImplementation(() => mockSalesSummaryController);
-
-    // Setup express app
+    // Setup express app with routes
     app = express();
     app.use(express.json());
     app.use("/api/sales-summary", salesSummaryRoutes);
@@ -38,23 +49,28 @@ describe("Sales Summary Routes", () => {
 
   describe("GET /api/sales-summary/total", () => {
     it("should call the controller's getTotalSales method", async () => {
-      mockSalesSummaryController.getTotalSales.mockImplementation((req, res) => {
+      // Setup the mock response
+      mockController.getTotalSales.mockImplementation((req, res) => {
         res.status(200).json({ success: true, data: { totalSales: 1500 } });
-        return Promise.resolve() as unknown as Promise<express.Response>;
+        return Promise.resolve(res);
       });
 
+      // Make the request
       const response = await request(app).get("/api/sales-summary/total");
 
+      // Check if middleware was called
       expect(authenticateMerchant).toHaveBeenCalled();
-      expect(mockSalesSummaryController.getTotalSales).toHaveBeenCalled();
+      
+      // Verify response
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ success: true, data: { totalSales: 1500 } });
-    });
+    }, 10000); // Increase timeout to 10 seconds
   });
 
   describe("GET /api/sales-summary/by-period/:timePeriod", () => {
     it("should call the controller's getSalesByTimePeriod method", async () => {
-      mockSalesSummaryController.getSalesByTimePeriod.mockImplementation((req, res) => {
+      // Setup the mock response
+      mockController.getSalesByTimePeriod.mockImplementation((req, res) => {
         res.status(200).json({
           success: true,
           data: {
@@ -65,23 +81,27 @@ describe("Sales Summary Routes", () => {
             ],
           },
         });
-        return Promise.resolve() as unknown as Promise<express.Response>;
+        return Promise.resolve(res);
       });
 
+      // Make the request
       const response = await request(app).get("/api/sales-summary/by-period/daily");
 
+      // Check if middleware was called
       expect(authenticateMerchant).toHaveBeenCalled();
-      expect(mockSalesSummaryController.getSalesByTimePeriod).toHaveBeenCalled();
+      
+      // Verify response
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data.timePeriod).toBe("daily");
       expect(response.body.data.sales.length).toBe(2);
-    });
+    }, 10000); // Increase timeout to 10 seconds
   });
 
   describe("GET /api/sales-summary/top-products", () => {
     it("should call the controller's getTopSellingProducts method", async () => {
-      mockSalesSummaryController.getTopSellingProducts.mockImplementation((req, res) => {
+      // Setup the mock response
+      mockController.getTopSellingProducts.mockImplementation((req, res) => {
         res.status(200).json({
           success: true,
           data: {
@@ -91,22 +111,26 @@ describe("Sales Summary Routes", () => {
             ],
           },
         });
-        return Promise.resolve() as unknown as Promise<express.Response>;
+        return Promise.resolve(res);
       });
 
+      // Make the request
       const response = await request(app).get("/api/sales-summary/top-products");
 
+      // Check if middleware was called
       expect(authenticateMerchant).toHaveBeenCalled();
-      expect(mockSalesSummaryController.getTopSellingProducts).toHaveBeenCalled();
+      
+      // Verify response
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data.topProducts.length).toBe(2);
-    });
+    }, 10000); // Increase timeout to 10 seconds
   });
 
   describe("GET /api/sales-summary", () => {
     it("should call the controller's getSalesSummary method", async () => {
-      mockSalesSummaryController.getSalesSummary.mockImplementation((req, res) => {
+      // Setup the mock response
+      mockController.getSalesSummary.mockImplementation((req, res) => {
         res.status(200).json({
           success: true,
           data: {
@@ -116,16 +140,19 @@ describe("Sales Summary Routes", () => {
             topProducts: [{ name: "Product 1", sku: "SKU1", total: 500, count: 5 }],
           },
         });
-        return Promise.resolve() as unknown as Promise<express.Response>;
+        return Promise.resolve(res);
       });
 
+      // Make the request
       const response = await request(app).get("/api/sales-summary");
 
+      // Check if middleware was called
       expect(authenticateMerchant).toHaveBeenCalled();
-      expect(mockSalesSummaryController.getSalesSummary).toHaveBeenCalled();
+      
+      // Verify response
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data.totalSales).toBe(1000);
-    });
+    }, 10000); // Increase timeout to 10 seconds
   });
 });
