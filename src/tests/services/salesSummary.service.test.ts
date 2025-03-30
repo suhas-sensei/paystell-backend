@@ -5,6 +5,13 @@ import { PaymentLink } from "../../entities/PaymentLink";
 import { Payment } from "../../entities/Payment";
 import { getRepository } from "typeorm";
 
+// Define repository interface types
+interface MockRepository<T> {
+  findOne?: jest.Mock;
+  find?: jest.Mock;
+  createQueryBuilder?: jest.Mock;
+}
+
 // Mock the typeorm getRepository
 jest.mock("typeorm", () => {
   const actual = jest.requireActual("typeorm");
@@ -16,10 +23,10 @@ jest.mock("typeorm", () => {
 
 describe("SalesSummaryService", () => {
   let salesSummaryService: SalesSummaryService;
-  let mockMerchantRepository: any;
-  let mockUserRepository: any;
-  let mockPaymentLinkRepository: any;
-  let mockPaymentRepository: any;
+  let mockMerchantRepository: MockRepository<MerchantEntity>;
+  let mockUserRepository: MockRepository<User>;
+  let mockPaymentLinkRepository: MockRepository<PaymentLink>;
+  let mockPaymentRepository: MockRepository<Payment>;
 
   beforeEach(() => {
     // Reset mocks
@@ -38,11 +45,7 @@ describe("SalesSummaryService", () => {
       find: jest.fn(),
     };
 
-    mockPaymentRepository = {
-      createQueryBuilder: jest.fn(),
-    };
-
-    // Setup mock query builder
+    // Create a mock query builder with appropriate methods
     const mockQueryBuilder = {
       innerJoin: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
@@ -57,10 +60,12 @@ describe("SalesSummaryService", () => {
       getRawMany: jest.fn(),
     };
 
-    mockPaymentRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+    mockPaymentRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    };
 
     // Setup getRepository mock to return our mock repositories
-    (getRepository as jest.Mock).mockImplementation((entity: any) => {
+    (getRepository as jest.Mock).mockImplementation((entity: unknown) => {
       if (entity === MerchantEntity) return mockMerchantRepository;
       if (entity === User) return mockUserRepository;
       if (entity === PaymentLink) return mockPaymentLinkRepository;
@@ -74,7 +79,7 @@ describe("SalesSummaryService", () => {
 
   describe("getTotalSales", () => {
     it("should throw an error if merchant not found", async () => {
-      mockMerchantRepository.findOne.mockResolvedValue(null);
+      mockMerchantRepository.findOne?.mockResolvedValue(null);
 
       await expect(salesSummaryService.getTotalSales("merchant-id"))
         .rejects
@@ -82,11 +87,11 @@ describe("SalesSummaryService", () => {
     });
 
     it("should throw an error if user not found", async () => {
-      mockMerchantRepository.findOne.mockResolvedValue({
+      mockMerchantRepository.findOne?.mockResolvedValue({
         id: "merchant-id",
         email: "merchant@example.com",
       });
-      mockUserRepository.findOne.mockResolvedValue(null);
+      mockUserRepository.findOne?.mockResolvedValue(null);
 
       await expect(salesSummaryService.getTotalSales("merchant-id"))
         .rejects
@@ -94,17 +99,17 @@ describe("SalesSummaryService", () => {
     });
 
     it("should return 0 if no payment links found", async () => {
-      mockMerchantRepository.findOne.mockResolvedValue({
+      mockMerchantRepository.findOne?.mockResolvedValue({
         id: "merchant-id",
         email: "merchant@example.com",
       });
-      mockUserRepository.findOne.mockResolvedValue({
+      mockUserRepository.findOne?.mockResolvedValue({
         id: 1,
         email: "merchant@example.com",
       });
-      mockPaymentLinkRepository.find.mockResolvedValue([]);
+      mockPaymentLinkRepository.find?.mockResolvedValue([]);
       
-      const queryBuilder = mockPaymentRepository.createQueryBuilder();
+      const queryBuilder = mockPaymentRepository.createQueryBuilder?.();
       queryBuilder.getRawOne.mockResolvedValue({ total: null });
 
       const result = await salesSummaryService.getTotalSales("merchant-id");
@@ -112,20 +117,20 @@ describe("SalesSummaryService", () => {
     });
 
     it("should return the total sales amount", async () => {
-      mockMerchantRepository.findOne.mockResolvedValue({
+      mockMerchantRepository.findOne?.mockResolvedValue({
         id: "merchant-id",
         email: "merchant@example.com",
       });
-      mockUserRepository.findOne.mockResolvedValue({
+      mockUserRepository.findOne?.mockResolvedValue({
         id: 1,
         email: "merchant@example.com",
       });
-      mockPaymentLinkRepository.find.mockResolvedValue([
+      mockPaymentLinkRepository.find?.mockResolvedValue([
         { id: "link-1" },
         { id: "link-2" },
       ]);
       
-      const queryBuilder = mockPaymentRepository.createQueryBuilder();
+      const queryBuilder = mockPaymentRepository.createQueryBuilder?.();
       queryBuilder.getRawOne.mockResolvedValue({ total: "1500.50" });
 
       const result = await salesSummaryService.getTotalSales("merchant-id");
@@ -136,34 +141,34 @@ describe("SalesSummaryService", () => {
 
   describe("getSalesByTimePeriod", () => {
     it("should return an empty array if no payment links found", async () => {
-      mockMerchantRepository.findOne.mockResolvedValue({
+      mockMerchantRepository.findOne?.mockResolvedValue({
         id: "merchant-id",
         email: "merchant@example.com",
       });
-      mockUserRepository.findOne.mockResolvedValue({
+      mockUserRepository.findOne?.mockResolvedValue({
         id: 1,
         email: "merchant@example.com",
       });
-      mockPaymentLinkRepository.find.mockResolvedValue([]);
+      mockPaymentLinkRepository.find?.mockResolvedValue([]);
 
       const result = await salesSummaryService.getSalesByTimePeriod("merchant-id", "daily");
       expect(result).toEqual([]);
     });
 
     it("should return daily sales data", async () => {
-      mockMerchantRepository.findOne.mockResolvedValue({
+      mockMerchantRepository.findOne?.mockResolvedValue({
         id: "merchant-id",
         email: "merchant@example.com",
       });
-      mockUserRepository.findOne.mockResolvedValue({
+      mockUserRepository.findOne?.mockResolvedValue({
         id: 1,
         email: "merchant@example.com",
       });
-      mockPaymentLinkRepository.find.mockResolvedValue([
+      mockPaymentLinkRepository.find?.mockResolvedValue([
         { id: "link-1" },
       ]);
       
-      const queryBuilder = mockPaymentRepository.createQueryBuilder();
+      const queryBuilder = mockPaymentRepository.createQueryBuilder?.();
       queryBuilder.getRawMany.mockResolvedValue([
         { date: "2023-01-01", total: "100.00" },
         { date: "2023-01-02", total: "200.00" },
@@ -179,16 +184,16 @@ describe("SalesSummaryService", () => {
 
   describe("getTopSellingProducts", () => {
     it("should return top selling products", async () => {
-      mockMerchantRepository.findOne.mockResolvedValue({
+      mockMerchantRepository.findOne?.mockResolvedValue({
         id: "merchant-id",
         email: "merchant@example.com",
       });
-      mockUserRepository.findOne.mockResolvedValue({
+      mockUserRepository.findOne?.mockResolvedValue({
         id: 1,
         email: "merchant@example.com",
       });
       
-      const queryBuilder = mockPaymentRepository.createQueryBuilder();
+      const queryBuilder = mockPaymentRepository.createQueryBuilder?.();
       queryBuilder.getRawMany.mockResolvedValue([
         { name: "Product 1", sku: "SKU1", total: "500.00", count: "5" },
         { name: "Product 2", sku: "SKU2", total: "300.00", count: "3" },
