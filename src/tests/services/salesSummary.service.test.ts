@@ -17,7 +17,7 @@ jest.mock("typeorm", () => {
   const actual = jest.requireActual("typeorm");
   return {
     ...actual,
-    getRepository: jest.fn()
+    getRepository: jest.fn(),
   };
 });
 
@@ -81,9 +81,9 @@ describe("SalesSummaryService", () => {
     it("should throw an error if merchant not found", async () => {
       mockMerchantRepository.findOne?.mockResolvedValue(null);
 
-      await expect(salesSummaryService.getTotalSales("merchant-id"))
-        .rejects
-        .toThrow("Merchant not found");
+      await expect(
+        salesSummaryService.getTotalSales("merchant-id"),
+      ).rejects.toThrow("Merchant not found");
     });
 
     it("should throw an error if user not found", async () => {
@@ -93,9 +93,9 @@ describe("SalesSummaryService", () => {
       });
       mockUserRepository.findOne?.mockResolvedValue(null);
 
-      await expect(salesSummaryService.getTotalSales("merchant-id"))
-        .rejects
-        .toThrow("User associated with merchant not found");
+      await expect(
+        salesSummaryService.getTotalSales("merchant-id"),
+      ).rejects.toThrow("User associated with merchant not found");
     });
 
     it("should return 0 if no payment links found", async () => {
@@ -108,7 +108,7 @@ describe("SalesSummaryService", () => {
         email: "merchant@example.com",
       });
       mockPaymentLinkRepository.find?.mockResolvedValue([]);
-      
+
       const queryBuilder = mockPaymentRepository.createQueryBuilder?.();
       queryBuilder.getRawOne.mockResolvedValue({ total: null });
 
@@ -129,13 +129,15 @@ describe("SalesSummaryService", () => {
         { id: "link-1" },
         { id: "link-2" },
       ]);
-      
+
       const queryBuilder = mockPaymentRepository.createQueryBuilder?.();
       queryBuilder.getRawOne.mockResolvedValue({ total: "1500.50" });
 
       const result = await salesSummaryService.getTotalSales("merchant-id");
       expect(result).toBe("1500.50");
-      expect(mockPaymentRepository.createQueryBuilder).toHaveBeenCalledWith("payment");
+      expect(mockPaymentRepository.createQueryBuilder).toHaveBeenCalledWith(
+        "payment",
+      );
     });
   });
 
@@ -151,7 +153,10 @@ describe("SalesSummaryService", () => {
       });
       mockPaymentLinkRepository.find?.mockResolvedValue([]);
 
-      const result = await salesSummaryService.getSalesByTimePeriod("merchant-id", "daily");
+      const result = await salesSummaryService.getSalesByTimePeriod(
+        "merchant-id",
+        "daily",
+      );
       expect(result).toEqual([]);
     });
 
@@ -164,17 +169,18 @@ describe("SalesSummaryService", () => {
         id: 1,
         email: "merchant@example.com",
       });
-      mockPaymentLinkRepository.find?.mockResolvedValue([
-        { id: "link-1" },
-      ]);
-      
+      mockPaymentLinkRepository.find?.mockResolvedValue([{ id: "link-1" }]);
+
       const queryBuilder = mockPaymentRepository.createQueryBuilder?.();
       queryBuilder.getRawMany.mockResolvedValue([
         { date: "2023-01-01", total: "100.00" },
         { date: "2023-01-02", total: "200.00" },
       ]);
 
-      const result = await salesSummaryService.getSalesByTimePeriod("merchant-id", "daily");
+      const result = await salesSummaryService.getSalesByTimePeriod(
+        "merchant-id",
+        "daily",
+      );
       expect(result).toEqual([
         { date: "2023-01-01", total: 100 },
         { date: "2023-01-02", total: 200 },
@@ -192,14 +198,17 @@ describe("SalesSummaryService", () => {
         id: 1,
         email: "merchant@example.com",
       });
-      
+
       const queryBuilder = mockPaymentRepository.createQueryBuilder?.();
       queryBuilder.getRawMany.mockResolvedValue([
         { name: "Product 1", sku: "SKU1", total: "500.00", count: "5" },
         { name: "Product 2", sku: "SKU2", total: "300.00", count: "3" },
       ]);
 
-      const result = await salesSummaryService.getTopSellingProducts("merchant-id", 5);
+      const result = await salesSummaryService.getTopSellingProducts(
+        "merchant-id",
+        5,
+      );
       expect(result).toEqual([
         { name: "Product 1", sku: "SKU1", total: 500, count: 5 },
         { name: "Product 2", sku: "SKU2", total: 300, count: 3 },
@@ -211,9 +220,10 @@ describe("SalesSummaryService", () => {
     it("should return a complete sales summary", async () => {
       // Mock getTotalSales
       jest.spyOn(salesSummaryService, "getTotalSales").mockResolvedValue(1000);
-      
+
       // Mock getSalesByTimePeriod for daily
-      jest.spyOn(salesSummaryService, "getSalesByTimePeriod")
+      jest
+        .spyOn(salesSummaryService, "getSalesByTimePeriod")
         .mockImplementation(async (merchantId, period) => {
           if (period === "daily") {
             return [
@@ -227,15 +237,17 @@ describe("SalesSummaryService", () => {
             ];
           }
         });
-      
+
       // Mock getTopSellingProducts
-      jest.spyOn(salesSummaryService, "getTopSellingProducts").mockResolvedValue([
-        { name: "Product 1", sku: "SKU1", total: 500, count: 5 },
-        { name: "Product 2", sku: "SKU2", total: 300, count: 3 },
-      ]);
+      jest
+        .spyOn(salesSummaryService, "getTopSellingProducts")
+        .mockResolvedValue([
+          { name: "Product 1", sku: "SKU1", total: 500, count: 5 },
+          { name: "Product 2", sku: "SKU2", total: 300, count: 3 },
+        ]);
 
       const result = await salesSummaryService.getSalesSummary("merchant-id");
-      
+
       expect(result).toEqual({
         totalSales: 1000,
         dailySales: [

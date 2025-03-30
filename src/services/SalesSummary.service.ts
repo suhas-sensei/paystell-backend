@@ -13,7 +13,11 @@ export class SalesSummaryService {
   /**
    * Get merchant's total sales
    */
-  async getTotalSales(merchantId: string, startDate?: Date, endDate?: Date): Promise<number> {
+  async getTotalSales(
+    merchantId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
     // Find the merchant first
     const merchant = await this.merchantRepository.findOne({
       where: { id: merchantId, isActive: true },
@@ -38,7 +42,7 @@ export class SalesSummaryService {
       where: { userId: user.id },
     });
 
-    const paymentLinkIds = paymentLinks.map(link => link.id);
+    const paymentLinkIds = paymentLinks.map((link) => link.id);
 
     // Calculate the sum of all completed payments
     const result = await this.paymentRepository
@@ -48,11 +52,11 @@ export class SalesSummaryService {
       .andWhere("payment.status = :status", { status: "completed" })
       .andWhere(
         startDate ? "payment.createdAt >= :startDate" : "1=1",
-        startDate ? { startDate } : {}
+        startDate ? { startDate } : {},
       )
       .andWhere(
-        endDate ? "payment.createdAt <= :endDate" : "1=1", 
-        endDate ? { endDate } : {}
+        endDate ? "payment.createdAt <= :endDate" : "1=1",
+        endDate ? { endDate } : {},
       )
       .select("SUM(payment.amount)", "total")
       .getRawOne();
@@ -64,10 +68,10 @@ export class SalesSummaryService {
    * Get merchant's sales by time period (daily, weekly, monthly)
    */
   async getSalesByTimePeriod(
-    merchantId: string, 
-    timePeriod: 'daily' | 'weekly' | 'monthly',
+    merchantId: string,
+    timePeriod: "daily" | "weekly" | "monthly",
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ): Promise<{ date: string; total: number }[]> {
     // Find the merchant first
     const merchant = await this.merchantRepository.findOne({
@@ -92,7 +96,7 @@ export class SalesSummaryService {
       where: { userId: user.id },
     });
 
-    const paymentLinkIds = paymentLinks.map(link => link.id);
+    const paymentLinkIds = paymentLinks.map((link) => link.id);
 
     if (paymentLinkIds.length === 0) {
       return []; // Return empty result if no payment links found
@@ -106,17 +110,17 @@ export class SalesSummaryService {
     if (!actualStartDate) {
       // Default time periods if start date not provided
       switch (timePeriod) {
-        case 'daily':
+        case "daily":
           // Last 7 days
           actualStartDate = new Date(now);
           actualStartDate.setDate(now.getDate() - 7);
           break;
-        case 'weekly':
+        case "weekly":
           // Last 4 weeks
           actualStartDate = new Date(now);
           actualStartDate.setDate(now.getDate() - 28);
           break;
-        case 'monthly':
+        case "monthly":
           // Last 12 months
           actualStartDate = new Date(now);
           actualStartDate.setMonth(now.getMonth() - 12);
@@ -127,15 +131,15 @@ export class SalesSummaryService {
     // Build the date truncation SQL based on the time period
     let dateFormat: string;
     switch (timePeriod) {
-      case 'daily':
-        dateFormat = 'YYYY-MM-DD';
+      case "daily":
+        dateFormat = "YYYY-MM-DD";
         break;
-      case 'weekly':
+      case "weekly":
         // Group by ISO week
-        dateFormat = 'IYYY-IW';
+        dateFormat = "IYYY-IW";
         break;
-      case 'monthly':
-        dateFormat = 'YYYY-MM';
+      case "monthly":
+        dateFormat = "YYYY-MM";
         break;
     }
 
@@ -145,7 +149,9 @@ export class SalesSummaryService {
       .innerJoin("payment.paymentLink", "paymentLink")
       .where("paymentLink.id IN (:...ids)", { ids: paymentLinkIds })
       .andWhere("payment.status = :status", { status: "completed" })
-      .andWhere("payment.createdAt >= :startDate", { startDate: actualStartDate })
+      .andWhere("payment.createdAt >= :startDate", {
+        startDate: actualStartDate,
+      })
       .andWhere("payment.createdAt <= :endDate", { endDate: actualEndDate })
       .select(`TO_CHAR(payment.createdAt, '${dateFormat}')`, "date")
       .addSelect("SUM(payment.amount)", "total")
@@ -153,9 +159,9 @@ export class SalesSummaryService {
       .orderBy(`TO_CHAR(payment.createdAt, '${dateFormat}')`)
       .getRawMany();
 
-    return result.map(item => ({
+    return result.map((item) => ({
       date: item.date,
-      total: parseFloat(item.total) || 0
+      total: parseFloat(item.total) || 0,
     }));
   }
 
@@ -166,7 +172,7 @@ export class SalesSummaryService {
     merchantId: string,
     limit: number = 10,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ): Promise<{ name: string; sku: string; total: number; count: number }[]> {
     // Find the merchant
     const merchant = await this.merchantRepository.findOne({
@@ -189,7 +195,8 @@ export class SalesSummaryService {
     // Set default date range if not provided
     const now = new Date();
     const actualEndDate = endDate || now;
-    const actualStartDate = startDate || new Date(now.setMonth(now.getMonth() - 3)); // Default to last 3 months
+    const actualStartDate =
+      startDate || new Date(now.setMonth(now.getMonth() - 3)); // Default to last 3 months
 
     // Query to get top selling products
     const result = await this.paymentRepository
@@ -197,7 +204,9 @@ export class SalesSummaryService {
       .innerJoin("payment.paymentLink", "paymentLink")
       .where("paymentLink.userId = :userId", { userId: user.id })
       .andWhere("payment.status = :status", { status: "completed" })
-      .andWhere("payment.createdAt >= :startDate", { startDate: actualStartDate })
+      .andWhere("payment.createdAt >= :startDate", {
+        startDate: actualStartDate,
+      })
       .andWhere("payment.createdAt <= :endDate", { endDate: actualEndDate })
       .select("paymentLink.name", "name")
       .addSelect("paymentLink.sku", "sku")
@@ -209,11 +218,11 @@ export class SalesSummaryService {
       .limit(limit)
       .getRawMany();
 
-    return result.map(item => ({
+    return result.map((item) => ({
       name: item.name,
       sku: item.sku,
       total: parseFloat(item.total) || 0,
-      count: parseInt(item.count) || 0
+      count: parseInt(item.count) || 0,
     }));
   }
 
@@ -223,7 +232,7 @@ export class SalesSummaryService {
   async getSalesSummary(
     merchantId: string,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ): Promise<{
     totalSales: number;
     dailySales: { date: string; total: number }[];
@@ -231,18 +240,19 @@ export class SalesSummaryService {
     topProducts: { name: string; sku: string; total: number; count: number }[];
   }> {
     // Execute all queries in parallel for better performance
-    const [totalSales, dailySales, monthlySales, topProducts] = await Promise.all([
-      this.getTotalSales(merchantId, startDate, endDate),
-      this.getSalesByTimePeriod(merchantId, 'daily', startDate, endDate),
-      this.getSalesByTimePeriod(merchantId, 'monthly', startDate, endDate),
-      this.getTopSellingProducts(merchantId, 5, startDate, endDate)
-    ]);
+    const [totalSales, dailySales, monthlySales, topProducts] =
+      await Promise.all([
+        this.getTotalSales(merchantId, startDate, endDate),
+        this.getSalesByTimePeriod(merchantId, "daily", startDate, endDate),
+        this.getSalesByTimePeriod(merchantId, "monthly", startDate, endDate),
+        this.getTopSellingProducts(merchantId, 5, startDate, endDate),
+      ]);
 
     return {
       totalSales,
       dailySales,
       monthlySales,
-      topProducts
+      topProducts,
     };
   }
 }

@@ -39,7 +39,8 @@ describe("Sales Summary Routes", () => {
     jest.clearAllMocks();
 
     // Get the mocked controller instance
-    mockController = new SalesSummaryController() as jest.Mocked<SalesSummaryController>;
+    mockController =
+      new SalesSummaryController() as jest.Mocked<SalesSummaryController>;
 
     // Setup express app with routes
     app = express();
@@ -60,10 +61,13 @@ describe("Sales Summary Routes", () => {
 
       // Check if middleware was called
       expect(authenticateMerchant).toHaveBeenCalled();
-      
+
       // Verify response
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ success: true, data: { totalSales: 1500 } });
+      expect(response.body).toEqual({
+        success: true,
+        data: { totalSales: 1500 },
+      });
     }, 10000); // Increase timeout to 10 seconds
   });
 
@@ -85,11 +89,13 @@ describe("Sales Summary Routes", () => {
       });
 
       // Make the request
-      const response = await request(app).get("/api/sales-summary/by-period/daily");
+      const response = await request(app).get(
+        "/api/sales-summary/by-period/daily",
+      );
 
       // Check if middleware was called
       expect(authenticateMerchant).toHaveBeenCalled();
-      
+
       // Verify response
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -115,11 +121,13 @@ describe("Sales Summary Routes", () => {
       });
 
       // Make the request
-      const response = await request(app).get("/api/sales-summary/top-products");
+      const response = await request(app).get(
+        "/api/sales-summary/top-products",
+      );
 
       // Check if middleware was called
       expect(authenticateMerchant).toHaveBeenCalled();
-      
+
       // Verify response
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -137,7 +145,9 @@ describe("Sales Summary Routes", () => {
             totalSales: 1000,
             dailySales: [{ date: "2023-01-01", total: 100 }],
             monthlySales: [{ date: "2023-01", total: 300 }],
-            topProducts: [{ name: "Product 1", sku: "SKU1", total: 500, count: 5 }],
+            topProducts: [
+              { name: "Product 1", sku: "SKU1", total: 500, count: 5 },
+            ],
           },
         });
         return Promise.resolve(res);
@@ -148,7 +158,7 @@ describe("Sales Summary Routes", () => {
 
       // Check if middleware was called
       expect(authenticateMerchant).toHaveBeenCalled();
-      
+
       // Verify response
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);

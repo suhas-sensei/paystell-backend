@@ -22,8 +22,12 @@ export class SalesSummaryController {
       return res.status(401).json({ error: "Merchant not authenticated" });
     }
 
-    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
-    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : undefined;
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : undefined;
 
     if (startDate && isNaN(startDate.getTime())) {
       return res.status(400).json({ error: "Invalid startDate format" });
@@ -37,18 +41,19 @@ export class SalesSummaryController {
       const totalSales = await this.salesSummaryService.getTotalSales(
         merchantId,
         startDate,
-        endDate
+        endDate,
       );
 
       return res.status(200).json({
         success: true,
-        data: { totalSales }
+        data: { totalSales },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
       return res.status(500).json({
         success: false,
-        error: errorMessage
+        error: errorMessage,
       });
     }
   }
@@ -61,15 +66,19 @@ export class SalesSummaryController {
       return res.status(401).json({ error: "Merchant not authenticated" });
     }
 
-    const timePeriod = req.params.timePeriod as 'daily' | 'weekly' | 'monthly';
-    if (!['daily', 'weekly', 'monthly'].includes(timePeriod)) {
+    const timePeriod = req.params.timePeriod as "daily" | "weekly" | "monthly";
+    if (!["daily", "weekly", "monthly"].includes(timePeriod)) {
       return res.status(400).json({
-        error: "Invalid timePeriod. Must be one of: daily, weekly, monthly"
+        error: "Invalid timePeriod. Must be one of: daily, weekly, monthly",
       });
     }
 
-    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
-    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : undefined;
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : undefined;
 
     if (startDate && isNaN(startDate.getTime())) {
       return res.status(400).json({ error: "Invalid startDate format" });
@@ -84,21 +93,22 @@ export class SalesSummaryController {
         merchantId,
         timePeriod,
         startDate,
-        endDate
+        endDate,
       );
 
       return res.status(200).json({
         success: true,
         data: {
           timePeriod,
-          sales: salesByPeriod
-        }
+          sales: salesByPeriod,
+        },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
       return res.status(500).json({
         success: false,
-        error: errorMessage
+        error: errorMessage,
       });
     }
   }
@@ -114,11 +124,17 @@ export class SalesSummaryController {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
 
     if (isNaN(limit) || limit < 1 || limit > 100) {
-      return res.status(400).json({ error: "Invalid limit. Must be a number between 1 and 100" });
+      return res
+        .status(400)
+        .json({ error: "Invalid limit. Must be a number between 1 and 100" });
     }
 
-    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
-    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : undefined;
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : undefined;
 
     if (startDate && isNaN(startDate.getTime())) {
       return res.status(400).json({ error: "Invalid startDate format" });
@@ -133,18 +149,19 @@ export class SalesSummaryController {
         merchantId,
         limit,
         startDate,
-        endDate
+        endDate,
       );
 
       return res.status(200).json({
         success: true,
-        data: { topProducts }
+        data: { topProducts },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
       return res.status(500).json({
         success: false,
-        error: errorMessage
+        error: errorMessage,
       });
     }
   }
@@ -157,8 +174,12 @@ export class SalesSummaryController {
       return res.status(401).json({ error: "Merchant not authenticated" });
     }
 
-    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
-    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : undefined;
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : undefined;
 
     if (startDate && isNaN(startDate.getTime())) {
       return res.status(400).json({ error: "Invalid startDate format" });
@@ -172,18 +193,19 @@ export class SalesSummaryController {
       const summary = await this.salesSummaryService.getSalesSummary(
         merchantId,
         startDate,
-        endDate
+        endDate,
       );
 
       return res.status(200).json({
         success: true,
-        data: summary
+        data: summary,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
       return res.status(500).json({
         success: false,
-        error: errorMessage
+        error: errorMessage,
       });
     }
   }
